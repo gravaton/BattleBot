@@ -7,6 +7,10 @@ module BSG
                         def self.attributes
                                 return { :name => "Gaius Baltar", :type => "Political Leader" }
                         end
+			def self.extended(mod)
+				print "Baltar was extended by #{mod}!\n"
+				super
+			end
                         def charinit
                                 @draw = { :yellow => 2, :green => 1, :blue => 1 }
                                 @loyaltycount = [2,1]
