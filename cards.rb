@@ -2,30 +2,45 @@
 
 module BSG
 	class GenericCard
-		def initialize(args)
-			raise "Mismatched card spec" unless self.class::Spec == args.keys
+		CardData = {}
+		def initialize(args = {})
+			args = self.class::CardData.merge(args)
+			raise "Mismatched card spec" unless self.class::Spec.sort == args.keys.sort
 			args.each_pair { |key, value|
 				self.instance_variable_set("@#{key.to_s}",value)
 				self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
 			}
 		end
 	end
+
+	# Loyalty Cards
 	class LoyaltyCard < GenericCard
-		attr_reader :name, :cylon
-		def initialize
-		end
+		Spec = [:name, :cylon]
 	end
 	class NotCylon < LoyaltyCard
+		CardData = { :name => "You are not a Cylon", :cylon => false }
 	end
 	class AreCylon < LoyaltyCard
+		CardData = { :name => "You are a Cylon", :cylon => true }
 	end
+
+	# Crisis Cards
 	class CrisisCard < GenericCard
+		Spec = [:name, :crisis, :activation, :jump]
 	end
+	class SampleCrisis < CrisisCard
+		CardData = { :name => "Water Shortage", :crisis => "Bad stuff!", :activation => :raiders, :jump => true }
+	end
+
+	# Skill Cards
 	class SkillCard < GenericCard
 		Spec = [:name, :trigger, :color, :value]
+		def initialize(val)
+			super(:value => val)
+		end
 		def self.build
-			cards = []
-			self::Values.each_pair { |value, number|
+			cards = Array.new
+			self::CardValues.each_pair { |value, number|
 				number.times do
 					cards << self.new(value)
 				end
@@ -34,22 +49,20 @@ module BSG
 		end
 	end
 	class XO < SkillCard
-		Values = { 5 => 1, 4 => 2, 3 => 1 }
-		def initialize(val)
-			super(:name => "Executive Order", :trigger => :action, :color => :green, :value => val)
-		end
+		CardValues = { 5 => 1, 4 => 2, 3 => 1 }
+		CardData = { :name => "Executive Order", :trigger => :action, :color => :green }
 	end
 	class IC < SkillCard
-		def initialize(val)
-			super(:name => "Investigative Committee", :trigger => :preskillcheck, :color => :yellow, :value => val)
-		end
+		CardValues = { 5 => 1, 4 => 2, 3 => 1 }
+		CardData = { :name => "Investigative Committe", :trigger => :preskillcheck, :color => :yellow }
 	end
 	class Calculations < SkillCard
-		def initialize(val)
-			super(:name => "Calculations", :trigger => :postroll, :color => :blue, :value => val)
-		end
+		CardValues = { 5 => 1, 4 => 2, 3 => 1 }
+		CardData = { :name => "Calculations", :trigger => :postdieroll, :color => :blue }
 	end
 end
 
 tim = BSG::XO::build
 print tim[0].name, "\n"
+jim = BSG::AreCylon.new
+print jim.name, "\n"
