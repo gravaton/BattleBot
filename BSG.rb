@@ -2,6 +2,7 @@
 
 require './character.rb'
 require './cards.rb'
+require './tokens.rb'
 require './boards.rb'
 
 
@@ -9,10 +10,11 @@ module BSG
 	class BSGGame
 		attr_reader :players, :options, :characters, :status
 	
-		def initialize
+		def initialize(args = nil)
 			# Somewhere in here we want to set the game options and figure out hwo that all works
 			@status = :forming
-			@players = []
+			@players = [BSG::BSGPlayer.new(self)]
+			@currentplayer = players[0]
 			@options = []
 			@characters = {}
 			@decks = {}
@@ -25,6 +27,10 @@ module BSG
 		def startgame
 			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
+			@players.shuffle!
+			@players.each { |p|
+				p.choosechar
+			}
 			@status = :playing
 		end
 		def drawcard(req)
@@ -77,35 +83,18 @@ module BSG
 			@game.drawcrisis(1)
 		end
 	end
-	class Token
-		def initialize
-		end
-	end
-	class Viper < Token
-		attr_reader :status
-		def initialize
-			@status = :ready
-		end
-	end
-	class Raptor < Token
-		attr_reader :status
-		def initialize
-			@status = :ready
-		end
-	end
 end
 # Figure out how many players
 game = BSG::BSGGame.new
 
-3.times do
+2.times do
 	game.addplayer(BSG::BSGPlayer.new(game))
 end
 
 print BSG::Characters::Baltar.attributes, "\n"
 
-game.players.each { |player|
-	player.choosechar
-}
+game.startgame
+
 game.players.each { |player|
 	player.draw	
 	print player.movement
