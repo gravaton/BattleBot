@@ -1,22 +1,31 @@
 #!/usr/local/bin/ruby
 
 require './character.rb'
+require './cards.rb'
 require './boards.rb'
 
 
 module BSG
 	class BSGGame
-		attr_reader :players, :options, :characters
+		attr_reader :players, :options, :characters, :status
 	
 		def initialize
 			# Somewhere in here we want to set the game options and figure out hwo that all works
+			@status = :forming
 			@players = []
 			@options = []
 			@characters = {}
+			@decks = {}
+			@tokens = {}
 			BSG::Characters.constants.each { |i| @characters[i] = BSG::Characters.const_get(i).attributes }
 		end
 		def addplayer(player)
 			@players << player
+		end
+		def startgame
+			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
+			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
+			@status = :playing
 		end
 		def drawcard(req)
 			req.each_pair { |color, quant|
@@ -31,6 +40,7 @@ module BSG
 
 	end
 
+	# BSGPlayer class should handle all communication with players as well as player specific data maybe
 	class BSGPlayer
 		def initialize(gameref)
 			@game = gameref
@@ -40,14 +50,18 @@ module BSG
 			@offices = []
 			@hand = []
 		end
-		def choosechar
-			print "Choose your character...\n"
-			@game.characters.keys.each_with_index { |i,j| print j + 1, ")\t", @game.characters[i][:name], "\n"}
-			print "\nSelection: \n"
+		def ask(askparams)
+			print askparams[:askprompt], "\n"
+			askparams[:options].each_with_index { |opt, index| print "#{(index + 1)})\t#{opt}\n" }
 			sel = gets.to_i
-			sel = sel - 1
-			print "Selecting #{@game.characters[@game.characters.keys[sel]][:name]}\n"
-			extend BSG::Characters.const_get(@game.characters.keys[sel])
+			return askparams[:options][sel - 1]
+		end
+		def choosechar
+			opts = @game.characters.values.map { |v| v[:name] }
+			name = ask(askprompt: 'Choose your character:', options: opts)
+			print "Selecting #{name}\n"
+			char = (@game.characters.select { |k,v| v[:name] == name }).keys[0]
+			extend BSG::Characters.const_get(char)
 			charinit
 		end
 		def draw
@@ -61,6 +75,32 @@ module BSG
 		end
 		def crisis
 			@game.drawcrisis(1)
+		end
+	end
+	class Token
+		def initialize
+		end
+	end
+	class Viper < Token
+		attr_reader :status
+		def initialize
+			@status = :ready
+		end
+	end
+	class Raptor < Token
+		attr_reader :status
+		def initialize
+			@status = :ready
+		end
+	end
+	class Card
+		def initialize
+		end
+	end
+	class SkillCard < Card
+		attr_redaer :color
+		def initialize(color)
+			@color = color
 		end
 	end
 end
