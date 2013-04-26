@@ -93,16 +93,6 @@ module BSG
 			@status = :ready
 		end
 	end
-	class Card
-		def initialize
-		end
-	end
-	class SkillCard < Card
-		attr_redaer :color
-		def initialize(color)
-			@color = color
-		end
-	end
 end
 # Figure out how many players
 game = BSG::BSGGame.new
