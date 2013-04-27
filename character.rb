@@ -3,46 +3,32 @@
 
 module BSG
 	module Characters
-                module Baltar
-                        def self.attributes
-                                return { :name => "Gaius Baltar", :type => "Political Leader" }
-                        end
-			def self.extended(mod)
-				print "Baltar was extended by #{mod}!\n"
-				super
+		class GenericCharacter
+			CharData = { :loyalty => [1,1] }
+			Spec = [ :name, :type, :draw, :loyalty ]
+			def initialize(args = {})
+				args = self.class::CharData.merge(args)
+				raise "Mismatched character spec" unless self.class::Spec.sort == args.keys.sort
+				args.each_pair { |key, value|
+					self.set_instance_variable("@#{key.to_s}", value)
+					self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
+				}
 			end
-                        def charinit
-                                @draw = { :yellow => 2, :green => 1, :blue => 1 }
-                                @loyaltycount = [2,1]
-                        end
-                        def crisis
-                                print "Choose a new card to draw\n"
-                                super
-                        end
-                end
-                module WillAdama
-                        def self.attributes
-                                return { :name => "William Adama", :type => "Military Leader" }
-                        end
-                        def charinit
-                                @draw = { :green => 3, :purple => 2 }
-                        end
-                end
-                module TomZarek
-                        def self.attributes
-                                return { :name => "Tom Zarek", :type => "Political Leader" }
-                        end
-                        def charinit
-                                @draw = { :yellow => 3, :green => 2 }
-                        end
-                end
-                module Callie
-                        def self.attributes
-                                return { :name => "Callie", :type => "Support Leader" }
-                        end
-                        def charinit
-                                @draw = { :green => 2, :purple => 2, :blue => 1 }
-                        end
-                end
+			def self.attributes
+				return self::CharData
+			end
+		end
+		class Baltar < GenericCharacter
+			CharData = { :name => "Gaius Baltar", :type => "Political Leader", :draw => { yellow: 2, green: 1, blue: 1 }, :loyalty => [2,1]}
+		end
+		class WillAdama < GenericCharacter
+			CharData = { :name => "William Adama", :type => "Military Leader", :draw => { purple: 2, green: 3 } }
+		end
+		class TomZarek < GenericCharacter
+			CharData = { :name => "Tom Zarek", :type => "Political Leader", :draw => { yellow: 3, green: 2, blue: 1 } }
+		end
+		class Callie < GenericCharacter
+			CharData = { :name => "Callie", :type => "Support Leader", :draw => { purple: 2, green: 2, blue: 1 } }
+		end
 	end
 end
