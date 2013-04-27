@@ -15,6 +15,19 @@ module Cards
 	end
 
 	# Loyalty Cards
+	module LoyaltyDeck
+		def self.build(args)
+			cards = []
+			args[:cylons].times do
+				cards << AreCylon.new
+			end
+			(args[:total] + (args[:cylons] - 1)).times do
+				cards << NotCylon.new
+			end
+			cards.shuffle!
+			return cards
+		end
+	end
 	class LoyaltyCard < GenericCard
 		Spec = [:name, :cylon]
 	end
@@ -26,8 +39,22 @@ module Cards
 	end
 
 	# Crisis Cards
+	module CrisisDeck
+		def self.build(cardlist = [])
+			cards = Array.new
+			cardlist = BSG::Cards.constants.map { |i| BSG::Cards.const_get(i) }.select! { |i| i < CrisisCard }
+			cardlist.each { |cardclass|
+				cards << cardclass::build()
+			}
+			cards.shuffle!
+			return cards
+		end
+	end
 	class CrisisCard < GenericCard
 		Spec = [:name, :crisis, :activation, :jump]
+		def self.build()
+			return self.new
+		end
 	end
 	class SampleCrisis < CrisisCard
 		CardData = { :name => "Water Shortage", :crisis => "Bad stuff!", :activation => :raiders, :jump => true }
@@ -46,6 +73,7 @@ module Cards
 			cards.each { |card|
 				decks[card.color] << card
 			}
+			decks.each_value { |i| i.shuffle! }
 			return decks
 		end
 	end
@@ -115,3 +143,5 @@ decks = BSG::Cards::SkillCardDecks.build
 decks[:blue].each { |i|
 	print "#{i.name}\t#{i.value}\n"
 }
+print BSG::Cards::LoyaltyDeck::build(:cylons => 2, :total => 12), "\n"
+print BSG::Cards::CrisisDeck::build, "\n"
