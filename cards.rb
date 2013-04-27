@@ -1,6 +1,7 @@
 #!/usr/local/bin/ruby
 
 module BSG
+module Cards
 	class GenericCard
 		CardData = {}
 		def initialize(args = {})
@@ -33,12 +34,27 @@ module BSG
 	end
 
 	# Skill Cards
+	module SkillCardDecks
+		def self.build(cardlist = [])
+			cards = Array.new
+			decks = Hash.new { |h,k| h[k] = [] }
+			cardlist = BSG::Cards.constants.map { |i| BSG::Cards.const_get(i) }.select! { |i| i < SkillCard }
+			cardlist.each { |cardclass|
+				cards << cardclass::build()
+			}
+			cards.flatten!
+			cards.each { |card|
+				decks[card.color] << card
+			}
+			return decks
+		end
+	end
 	class SkillCard < GenericCard
 		Spec = [:name, :trigger, :color, :value]
 		def initialize(val)
 			super(:value => val)
 		end
-		def self.build
+		def self.build()
 			cards = Array.new
 			self::CardValues.each_pair { |value, number|
 				number.times do
@@ -48,21 +64,54 @@ module BSG
 			return cards
 		end
 	end
-	class XO < SkillCard
-		CardValues = { 5 => 1, 4 => 2, 3 => 1 }
+	class ExecutiveOrder < SkillCard
+		CardValues = { 1 => 8, 2 => 6 }
 		CardData = { :name => "Executive Order", :trigger => :action, :color => :green }
 	end
-	class IC < SkillCard
-		CardValues = { 5 => 1, 4 => 2, 3 => 1 }
+	class DeclareEmergency < SkillCard
+		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
+		CardData = { :name => "Executive Order", :trigger => :postskillcheck, :color => :green }
+	end
+	class ConsolidatePower < SkillCard
+		CardValues = { 1 => 8, 2 => 6 }
+		CardData = { :name => "Consolidate Power", :trigger => :action, :color => :yellow }
+	end
+	class InvestigativeCommitte < SkillCard
+		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
 		CardData = { :name => "Investigative Committe", :trigger => :preskillcheck, :color => :yellow }
 	end
-	class Calculations < SkillCard
-		CardValues = { 5 => 1, 4 => 2, 3 => 1 }
-		CardData = { :name => "Calculations", :trigger => :postdieroll, :color => :blue }
+	class LaunchScout < SkillCard
+		CardValues = { 1 => 8, 2 => 6 }
+		CardData = { :name => "Launch Scout", :trigger => :action, :color => :purple }
+	end
+	class StrategicPlanning < SkillCard
+		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
+		CardData = { :name => "Strategic Planning", :trigger => :predieroll, :color => :purple }
+	end
+	class EvasiveManeuvers < SkillCard
+		CardValues = { 1 => 8, 2 => 6 }
+		CardData = { :name => "Evasive Maneuvers", :trigger => :afterraiderfire, :color => :red }
+	end
+	class MaximumFirepower < SkillCard
+		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
+		CardData = { :name => "Maximum Firepower", :trigger => :action, :color => :red }
+	end
+	class Repair < SkillCard
+		CardValues = { 1 => 8, 2 => 6 }
+		CardData = { :name => "Repair", :trigger => :action, :color => :blue }
+	end
+	class ScientificResearch < SkillCard
+		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
+		CardData = { :name => "Scientific Research", :trigger => :preskillcheck, :color => :blue }
 	end
 end
+end
 
-tim = BSG::XO::build
+tim = BSG::Cards::ExecutiveOrder::build
 print tim[0].name, "\n"
-jim = BSG::AreCylon.new
+jim = BSG::Cards::AreCylon.new
 print jim.name, "\n"
+decks = BSG::Cards::SkillCardDecks.build
+decks[:blue].each { |i|
+	print "#{i.name}\t#{i.value}\n"
+}

@@ -19,7 +19,8 @@ module BSG
 			@characters = {}
 			@decks = {}
 			@tokens = {}
-			BSG::Characters.constants.each { |i| @characters[i] = BSG::Characters.const_get(i).attributes }
+			# This is ugly and dumb right now
+			BSG::Characters.constants.each { |i| @characters[i] = BSG::Characters.const_get(i).attributes if BSG::Characters.const_get(i).superclass == BSG::Characters::GenericCharacter}
 		end
 		def addplayer(player)
 			@players << player
@@ -74,10 +75,10 @@ module BSG
 			@game.drawcard(@draw)
 		end
 		def movement
-			return "Default movement handler\n"
+			return @character.movement
 		end
 		def action
-			return "Default action handler\n"
+			return @character.action
 		end
 		def crisis
 			@game.drawcrisis(1)
