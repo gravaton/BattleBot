@@ -129,6 +129,9 @@ module Cards
 			}
 			return cards
 		end
+		def to_s
+			return "[#{@value}|#{@color.to_s.upcase}] - #{@name}"
+		end
 	end
 	class ExecutiveOrder < SkillCard
 		CardValues = { 1 => 8, 2 => 6 }

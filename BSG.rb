@@ -74,6 +74,11 @@ module BSG
 			print "Selecting #{name}\n"
 			@character = (@game.characters.select { |v| v.name == name })[0]
 		end
+		def checktriggers(trigger)
+			opts = Array.new
+			opts.concat(@hand.select { |i| i.trigger == trigger })
+			return opts
+		end
 		def draw
 			@hand.concat(@game.drawcard(@character.draw))
 		end
@@ -81,6 +86,7 @@ module BSG
 			return @character.movement
 		end
 		def action
+			ask(askprompt: 'Which action would you like to perform:', options: self.checktriggers(:action).map { |i| i.to_s }.concat(["Nothing"]))
 			return @character.action
 		end
 		def crisis
@@ -104,4 +110,3 @@ game.players.each { |player|
 	print player.action
 	player.crisis
 }
-

@@ -27,10 +27,10 @@ module BSG
 				return self.new
 			end
 			def movement
-				return "Generic movement handler"
+				return "Generic movement handler\n"
 			end
 			def action
-				return "Generic action handler"
+				return "Generic action handler\n"
 			end
 		end
 		class Baltar < GenericCharacter
