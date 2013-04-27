@@ -24,6 +24,7 @@ module BSG
 			@players << player
 		end
 		def startgame
+			@decks[:skillcards] = BSG::Cards::SkillCardDecks::build()
 			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
 			@players.shuffle!
@@ -35,9 +36,12 @@ module BSG
 			@status = :playing
 		end
 		def drawcard(req)
+			draw = []
 			req.each_pair { |color, quant|
 				print "Draw request for #{quant} #{color} cards\n"
+				draw.concat(@decks[:skillcards][color].draw(quant))
 			}
+			return draw
 		end
 		def drawcrisis(num)
 			print "Draw request for #{num} crisis cards\n"
@@ -49,6 +53,7 @@ module BSG
 
 	# BSGPlayer class should handle all communication with players as well as player specific data maybe
 	class BSGPlayer
+		attr_reader :hand
 		def initialize(gameref)
 			@game = gameref
 			@character = nil
@@ -70,7 +75,7 @@ module BSG
 			@character = (@game.characters.select { |v| v.name == name })[0]
 		end
 		def draw
-			@game.drawcard(@character.draw)
+			@hand.concat(@game.drawcard(@character.draw))
 		end
 		def movement
 			return @character.movement
@@ -94,6 +99,7 @@ game.startgame
 
 game.players.each { |player|
 	player.draw	
+	player.hand.each { |i| print "#{i}\n" }
 	print player.movement
 	print player.action
 	player.crisis

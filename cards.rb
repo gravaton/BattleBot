@@ -2,9 +2,42 @@
 
 module BSG
 module Cards
+	class Deck
+		attr_reader :drawpile
+		def initialize(args)
+			@drawpile = Array.new
+			@drawpile.concat(args[:cards])
+			@drawpile.each { |i| i.homedeck = self }
+			@discardpile = []
+		end
+		def draw(count = 1)
+			cards = []
+			count.times do
+				cards << @drawpile.shift
+				self.reshuffle if @drawpile.length == 0
+			end
+			return cards
+		end
+		def view(count = 1)
+			return @drawpile[0,count]
+		end
+		def discard(card)
+			@discardpile << card
+		end
+		def shuffle
+			@drawpile.shuffle!
+		end
+		def reshuffle
+			@drawpile.concat(@discardpile)
+			@discardpile = []
+			@drawpile.shuffle!
+		end
+	end
 	class GenericCard
 		CardData = {}
+		attr_accessor :homedeck
 		def initialize(args = {})
+			@homedeck = nil
 			args = self.class::CardData.merge(args)
 			raise "Mismatched card spec" unless self.class::Spec.sort == args.keys.sort
 			args.each_pair { |key, value|
@@ -25,7 +58,7 @@ module Cards
 				cards << NotCylon.new
 			end
 			cards.shuffle!
-			return cards
+			return BSG::Cards::Deck.new(:cards => cards)
 		end
 	end
 	class LoyaltyCard < GenericCard
@@ -47,7 +80,7 @@ module Cards
 				cards << cardclass::build()
 			}
 			cards.shuffle!
-			return cards
+			return BSG::Cards::Deck.new(:cards => cards)
 		end
 	end
 	class CrisisCard < GenericCard
@@ -77,7 +110,8 @@ module Cards
 			cards.each { |card|
 				decks[card.color] << card
 			}
-			decks.each_value { |i| i.shuffle! }
+			decks.keys.each { |i| decks[i] = BSG::Cards::Deck.new(:cards => decks[i]) }
+			decks.each_value { |i| i.shuffle }
 			return decks
 		end
 	end
@@ -138,3 +172,6 @@ module Cards
 	end
 end
 end
+
+tim = BSG::Cards::SkillCardDecks::build()
+print tim[:blue].draw(2) 
