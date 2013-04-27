@@ -3,19 +3,34 @@
 
 module BSG
 	module Characters
+		module CharacterList
+			def self.build(args = {})
+				chars = Array.new
+				charlist = BSG::Characters.constants.map { |i| BSG::Characters.const_get(i) }.select! { |i| i < GenericCharacter }
+				print charlist, "\n"
+				charlist.each { |charclass| chars << charclass::build() }
+				return chars
+			end
+		end
 		class GenericCharacter
-			CharData = { :loyalty => [1,1] }
 			Spec = [ :name, :type, :draw, :loyalty ]
 			def initialize(args = {})
+				args[:loyalty] = [1,1]
 				args = self.class::CharData.merge(args)
 				raise "Mismatched character spec" unless self.class::Spec.sort == args.keys.sort
 				args.each_pair { |key, value|
-					self.set_instance_variable("@#{key.to_s}", value)
+					self.instance_variable_set("@#{key.to_s}", value)
 					self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
 				}
 			end
-			def self.attributes
-				return self::CharData
+			def self.build
+				return self.new
+			end
+			def movement
+				return "Generic movement handler"
+			end
+			def action
+				return "Generic action handler"
 			end
 		end
 		class Baltar < GenericCharacter

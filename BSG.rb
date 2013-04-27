@@ -19,8 +19,6 @@ module BSG
 			@characters = {}
 			@decks = {}
 			@tokens = {}
-			# This is ugly and dumb right now
-			BSG::Characters.constants.each { |i| @characters[i] = BSG::Characters.const_get(i).attributes if BSG::Characters.const_get(i).superclass == BSG::Characters::GenericCharacter}
 		end
 		def addplayer(player)
 			@players << player
@@ -29,6 +27,8 @@ module BSG
 			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
 			@players.shuffle!
+			# Populate the character database
+			@characters = BSG::Characters::CharacterList::build()
 			@players.each { |p|
 				p.choosechar
 			}
@@ -63,16 +63,14 @@ module BSG
 			sel = gets.to_i
 			return askparams[:options][sel - 1]
 		end
-		def choosechar
-			opts = @game.characters.values.map { |v| v[:name] }
+		def choosechar(opts = nil)
+			opts ||= @game.characters.map { |v| v.name }
 			name = ask(askprompt: 'Choose your character:', options: opts)
 			print "Selecting #{name}\n"
-			char = (@game.characters.select { |k,v| v[:name] == name }).keys[0]
-			extend BSG::Characters.const_get(char)
-			charinit
+			@character = (@game.characters.select { |v| v.name == name })[0]
 		end
 		def draw
-			@game.drawcard(@draw)
+			@game.drawcard(@character.draw)
 		end
 		def movement
 			return @character.movement
@@ -91,8 +89,6 @@ game = BSG::BSGGame.new
 2.times do
 	game.addplayer(BSG::BSGPlayer.new(game))
 end
-
-print BSG::Characters::Baltar.attributes, "\n"
 
 game.startgame
 

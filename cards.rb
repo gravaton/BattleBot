@@ -57,6 +57,10 @@ module Cards
 		end
 	end
 	class SampleCrisis < CrisisCard
+		# For now I'm going to return 10 of these cards
+		def self.build()
+			return Array.new(10, self.new)
+		end
 		CardData = { :name => "Water Shortage", :crisis => "Bad stuff!", :activation => :raiders, :jump => true }
 	end
 
@@ -134,14 +138,3 @@ module Cards
 	end
 end
 end
-
-tim = BSG::Cards::ExecutiveOrder::build
-print tim[0].name, "\n"
-jim = BSG::Cards::AreCylon.new
-print jim.name, "\n"
-decks = BSG::Cards::SkillCardDecks.build
-decks[:blue].each { |i|
-	print "#{i.name}\t#{i.value}\n"
-}
-print BSG::Cards::LoyaltyDeck::build(:cylons => 2, :total => 12), "\n"
-print BSG::Cards::CrisisDeck::build, "\n"
