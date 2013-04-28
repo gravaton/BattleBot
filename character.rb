@@ -7,7 +7,6 @@ module BSG
 			def self.build(args = {})
 				chars = Array.new
 				charlist = BSG::Characters.constants.map { |i| BSG::Characters.const_get(i) }.select! { |i| i < GenericCharacter }
-				print charlist, "\n"
 				charlist.each { |charclass| chars << charclass::build() }
 				return chars
 			end

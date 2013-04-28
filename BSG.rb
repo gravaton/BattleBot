@@ -24,6 +24,7 @@ module BSG
 			@players << player
 		end
 		def startgame
+			@locations = BSG::Locations::LocationList::build()
 			@decks[:skillcards] = BSG::Cards::SkillCardDecks::build()
 			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
