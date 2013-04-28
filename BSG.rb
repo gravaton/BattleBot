@@ -8,32 +8,36 @@ require './boards.rb'
 
 module BSG
 	class BSGGame
-		attr_reader :players, :options, :characters, :status, :locations
+		attr_reader :players, :currentplayer, :options, :characters, :status, :boards, :decks
 	
 		def initialize(args = nil)
 			# Somewhere in here we want to set the game options and figure out hwo that all works
 			@status = :forming
-			@players = [BSG::BSGPlayer.new(self)]
-			@currentplayer = players[0]
 			@options = []
-			@characters = {}
-			@decks = {}
-			@tokens = {}
+			@decks = Hash.new
+			@tokens = Hash.new
+
+			@players = Array.new
+			addplayer(BSG::BSGPlayer.new(self))
+			@currentplayer = players[0]
 		end
 		def addplayer(player)
+			raise "Attempted to add a nonplayer" unless player.kind_of?BSG::BSGPlayer
 			@players << player
 		end
 		def startgame
 			# Populate the lists with available object
-			@locations = BSG::Locations::LocationList::build()
+			@boards = BSG::Locations::BoardList::build()
 			@decks[:skillcards] = BSG::Cards::SkillCardDecks::build()
+			@decks[:crisis] = BSG::Cards::CrisisDeck::build()
 			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
 			@characters = BSG::Characters::CharacterList::build()
+			@charavailable = @characters.keys
 
 			# Shuffle our players and let them pick their character
 			@players.shuffle!
-			@charavailable = @characters.keys
+			@currentplayer = @players[0]
 			@players.each { |p|
 				choosechar(p)
 			}
@@ -46,22 +50,26 @@ module BSG
 			@characters[selected.type].delete(selected)
 			@charavailable.delete(selected.type) unless selected.type == :support
 			if @charavailable == [ :support ]
-				print "We've chosen one of each type, reseting\n"
 				@charavailable = @characters.keys
 			end
 		end
-		def drawcard(req)
+		def drawcard(args)
+			req = args[:spec]
 			draw = []
-			req.each_pair { |color, quant|
-				print "Draw request for #{quant} #{color} cards\n"
-				draw.concat(@decks[:skillcards][color].draw(quant))
+			args[:spec].each_pair { |drawdeck, quant|
+				draw.concat(drawdeck.draw(quant))
 			}
 			return draw
 		end
 		def drawcrisis(num)
+			return @decks[:crisis].draw(1)
 			print "Draw request for #{num} crisis cards\n"
 		end
-		def gamestart
+		def docrisis(card)
+			print "Performing crisis \"#{card.name}\"\n"
+			print "Crisis Action \"#{card.crisis}\"\n"
+			print "Cylon Activation \"#{card.activation}\"\n"
+			print "Jump Status \"#{card.jump}\"\n"
 		end
 
 	end
@@ -72,7 +80,6 @@ module BSG
 		def initialize(gameref)
 			@game = gameref
 			@character = nil
-			@loyaltycount = [1,1]
 			@loyalties = []
 			@offices = []
 			@hand = []
@@ -95,27 +102,29 @@ module BSG
 			opts.concat(@hand.select { |i| i.trigger == trigger })
 			return opts
 		end
-		def draw
+		def skilldraw
 			drawreq = Hash.new
 			@character.draw.each_pair { |k,v|
 				if k.kind_of?Array
 					key = ask(askprompt: 'Choose which card type to draw:', options: k)
 				end
 				key ||= k
-				drawreq[key] = v
+				drawreq[@game.decks[:skillcards][key]] = v
 			}
-			@hand.concat(@game.drawcard(drawreq))
+			@hand.concat(@game.drawcard(:deck => :skillcards, :spec => drawreq))
 		end
 		def movement
-			destination = ask(askprompt: 'Choose which location to go to:', options: @game.locations.select { |i| i.team == :human }, attr: :name)
+			choices = @game.boards.map { |i| i.locations.select { |j| j.team == :human } }.flatten!
+			destination = ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name)
 			return @character.movement
 		end
 		def action
-			ask(askprompt: 'Which action would you like to perform:', options: self.checktriggers(:action).map { |i| i.to_s }.concat(["Nothing"]))
+			choices = self.checktriggers(:action).map { |i| i.to_s }.concat(["Nothing"])
+			ask(askprompt: 'Which action would you like to perform:', options: choices)
 			return @character.action
 		end
 		def crisis
-			@game.drawcrisis(1)
+			@game.docrisis(@game.drawcrisis(1)[0])
 		end
 	end
 end
@@ -129,8 +138,7 @@ end
 game.startgame
 
 game.players.each { |player|
-	player.draw	
-	player.hand.each { |i| print "#{i}\n" }
+	player.skilldraw	
 	print player.movement
 	print player.action
 	player.crisis

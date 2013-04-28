@@ -77,7 +77,7 @@ module Cards
 			cards = Array.new
 			cardlist = BSG::Cards.constants.map { |i| BSG::Cards.const_get(i) }.select! { |i| i < CrisisCard }
 			cardlist.each { |cardclass|
-				cards << cardclass::build()
+				cards.concat(cardclass::build())
 			}
 			cards.shuffle!
 			return BSG::Cards::Deck.new(:cards => cards)
@@ -94,7 +94,7 @@ module Cards
 		def self.build()
 			return Array.new(10, self.new)
 		end
-		CardData = { :name => "Water Shortage", :crisis => "Bad stuff!", :activation => :raiders, :jump => true }
+		CardData = { :name => "Generic Crisis", :crisis => "Bad stuff!", :activation => :raiders, :jump => true }
 	end
 
 	# Skill Cards
@@ -175,6 +175,3 @@ module Cards
 	end
 end
 end
-
-tim = BSG::Cards::SkillCardDecks::build()
-print tim[:blue].draw(2) 
