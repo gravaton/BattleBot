@@ -5,9 +5,10 @@ module BSG
 	module Characters
 		module CharacterList
 			def self.build(args = {})
-				chars = Array.new
+				chars = Hash.new { |k,j| k[j] = [] }
+				retchars = Hash.new
 				charlist = BSG::Characters.constants.map { |i| BSG::Characters.const_get(i) }.select! { |i| i < GenericCharacter }
-				charlist.each { |charclass| chars << charclass::build() }
+				charlist.map { |charclass| charclass::build() }.each { |charobj| chars[charobj.type] << charobj }
 				return chars
 			end
 		end
@@ -32,17 +33,35 @@ module BSG
 				return "Generic action handler\n"
 			end
 		end
-		class Baltar < GenericCharacter
-			CharData = { :name => "Gaius Baltar", :type => "Political Leader", :draw => { yellow: 2, green: 1, blue: 1 }, :loyalty => [2,1]}
+		class GaiusBaltar < GenericCharacter
+			CharData = { :name => "Gaius Baltar", :type => :political, :draw => { yellow: 2, green: 1, blue: 1 }, :loyalty => [2,1]}
 		end
-		class WillAdama < GenericCharacter
-			CharData = { :name => "William Adama", :type => "Military Leader", :draw => { purple: 2, green: 3 } }
+		class LauraRoslin < GenericCharacter
+			CharData = { :name => "Laura Roslin", :type => :political, :draw => { yellow: 3, green: 2 } }
 		end
 		class TomZarek < GenericCharacter
-			CharData = { :name => "Tom Zarek", :type => "Political Leader", :draw => { yellow: 3, green: 2, blue: 1 } }
+			CharData = { :name => "Tom Zarek", :type => :political, :draw => { yellow: 2, green: 2, purple: 1 } }
 		end
-		class Callie < GenericCharacter
-			CharData = { :name => "Callie", :type => "Support Leader", :draw => { purple: 2, green: 2, blue: 1 } }
+		class WilliamAdama < GenericCharacter
+			CharData = { :name => "William Adama", :type => :military, :draw => { purple: 2, green: 3 } }
+		end
+		class SaulTigh < GenericCharacter
+			CharData = { :name => "Saul Tigh", :type => :military, :draw => { purple: 3, green: 2 } }
+		end
+		class KarlAgathon < GenericCharacter
+			CharData = { :name => "Karl \"Helo\" Agathon", :type => :military, :draw => { purple: 2, green: 2, red: 1 } }
+		end
+		class KaraThrace < GenericCharacter
+			CharData = { :name => "Kara \"Starbuck\" Thrace", :type => :pilot, :draw => { purple: 2, red: 2, [ :green, :blue ] => 1 } }
+		end
+		class SharonValerii < GenericCharacter
+			CharData = { :name => "Sharon \"Boomer\" Valerii", :type => :pilot, :draw => { purple: 2, red: 2, blue: 1 }, :loyalty => [1,2] }
+		end
+		class LeeAdama < GenericCharacter
+			CharData = { :name => "Lee \"Apollo\" Adama", :type => :pilot, :draw => { red: 2, [ :green, :yellow ] => 2, purple: 1 } }
+		end
+		class GalenTyrol < GenericCharacter
+			CharData = { :name => "\"Chief\" Galen Tyrol", :type => :support, :draw => { blue: 2, green: 2, yellow: 1 } }
 		end
 	end
 end

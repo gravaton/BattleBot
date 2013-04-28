@@ -8,7 +8,7 @@ require './boards.rb'
 
 module BSG
 	class BSGGame
-		attr_reader :players, :options, :characters, :status
+		attr_reader :players, :options, :characters, :status, :locations
 	
 		def initialize(args = nil)
 			# Somewhere in here we want to set the game options and figure out hwo that all works
@@ -24,17 +24,31 @@ module BSG
 			@players << player
 		end
 		def startgame
+			# Populate the lists with available object
 			@locations = BSG::Locations::LocationList::build()
 			@decks[:skillcards] = BSG::Cards::SkillCardDecks::build()
 			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
-			@players.shuffle!
-			# Populate the character database
 			@characters = BSG::Characters::CharacterList::build()
+
+			# Shuffle our players and let them pick their character
+			@players.shuffle!
+			@charavailable = @characters.keys
 			@players.each { |p|
-				p.choosechar
+				choosechar(p)
 			}
 			@status = :playing
+		end
+		def choosechar(playerobj)
+			charlist = Array.new
+			@charavailable.each { |i| charlist.concat(@characters[i]) }
+			selected = playerobj.choosechar(charlist)
+			@characters[selected.type].delete(selected)
+			@charavailable.delete(selected.type) unless selected.type == :support
+			if @charavailable == [ :support ]
+				print "We've chosen one of each type, reseting\n"
+				@charavailable = @characters.keys
+			end
 		end
 		def drawcard(req)
 			draw = []
@@ -64,16 +78,17 @@ module BSG
 			@hand = []
 		end
 		def ask(askparams)
+			askparams[:attr] ||= :to_s
 			print askparams[:askprompt], "\n"
-			askparams[:options].each_with_index { |opt, index| print "#{(index + 1)})\t#{opt}\n" }
+			askparams[:options].each_with_index { |opt, index| print "#{(index + 1)})\t#{opt.send(askparams[:attr])}\n" }
 			sel = gets.to_i
 			return askparams[:options][sel - 1]
 		end
-		def choosechar(opts = nil)
-			opts ||= @game.characters.map { |v| v.name }
-			name = ask(askprompt: 'Choose your character:', options: opts)
-			print "Selecting #{name}\n"
-			@character = (@game.characters.select { |v| v.name == name })[0]
+		def choosechar(opts)
+			selected = ask(askprompt: 'Choose your character:', options: opts, attr: :name)
+			print "Selecting #{selected}\n"
+			@character = selected
+			return @character
 		end
 		def checktriggers(trigger)
 			opts = Array.new
@@ -81,9 +96,18 @@ module BSG
 			return opts
 		end
 		def draw
-			@hand.concat(@game.drawcard(@character.draw))
+			drawreq = Hash.new
+			@character.draw.each_pair { |k,v|
+				if k.kind_of?Array
+					key = ask(askprompt: 'Choose which card type to draw:', options: k)
+				end
+				key ||= k
+				drawreq[key] = v
+			}
+			@hand.concat(@game.drawcard(drawreq))
 		end
 		def movement
+			destination = ask(askprompt: 'Choose which location to go to:', options: @game.locations.select { |i| i.team == :human }, attr: :name)
 			return @character.movement
 		end
 		def action
