@@ -40,11 +40,14 @@ module BSG
 			def movement(args)
 				choices = args[:game].boards.map { |i| i.locations.select { |j| j.team == :human } }.flatten!
 				destination = args[:player].ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name)
+				# Discard a card if you moved ships!
 				return destination
 			end
 			def action(args)
-				choices = args[:player].checktriggers(:action).map { |i| i.to_s }.concat(["Nothing"])
-				args[:player].ask(askprompt: 'Which action would you like to perform:', options: choices)
+				choices = args[:player].checktriggers(:action)
+				object = args[:player].ask(askprompt: 'Which action would you like to perform:', options: choices.keys.concat(["Nothing"]))
+				return if object == "Nothing"
+				args[:player].trigger(object.method(choices[object]))
 				return "Generic action handler\n"
 			end
 			def crisis(args)

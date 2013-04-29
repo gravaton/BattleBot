@@ -45,6 +45,13 @@ module Cards
 				self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
 			}
 		end
+		def gettrigger(args)
+			method = Hash.new
+			if( (trigs = self.instance_variable_get("@trigger")).kind_of?Hash)
+				method[self] = trigs[args[:trigger]]
+			end
+			return method
+		end
 	end
 
 	# Loyalty Cards
@@ -135,7 +142,10 @@ module Cards
 	end
 	class ExecutiveOrder < SkillCard
 		CardValues = { 1 => 8, 2 => 6 }
-		CardData = { :name => "Executive Order", :trigger => :action, :color => :green }
+		CardData = { :name => "Executive Order", :trigger => { :action => :action }, :color => :green }
+		def action(args)
+			print "Executive Order!\n"
+		end
 	end
 	class DeclareEmergency < SkillCard
 		CardValues = { 5 => 1, 4 => 2, 3 => 4 }

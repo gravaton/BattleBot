@@ -4,7 +4,7 @@ module BSG
 module Locations
 	class GenericLocation
 		LocData = {:events => {:action => :action }}
-		Spec = [ :name, :team, :status, :events ]
+		Spec = [ :name, :team, :status ]
 		def initialize(args = {})
 			args = self.class::LocData.merge(args)
 			raise "Mismatched location spec" unless self.class::Spec.sort == args.keys.sort

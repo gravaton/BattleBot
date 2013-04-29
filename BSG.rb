@@ -126,8 +126,8 @@ module BSG
 			return target.call(:game => @game, :player => self, :character => @character)
 		end
 		def checktriggers(trigger)
-			opts = Array.new
-			opts.concat(@hand.select { |i| i.trigger == trigger })
+			opts = Hash.new
+			@hand.each { |i| opts.update(i.gettrigger(:trigger => trigger)) }
 			# Check for location abilities
 			# Check for loyalty card abilities
 			# Check for character abilities
