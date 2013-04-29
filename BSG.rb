@@ -9,13 +9,12 @@ require './boards.rb'
 module BSG
 	class BSGGame
 		attr_reader :players, :currentplayer, :options, :characters, :status, :boards, :decks
+		attr_accessor :jump
 	
 		def initialize(args = nil)
 			# Somewhere in here we want to set the game options and figure out hwo that all works
 			@status = :forming
 			@options = []
-			@decks = Hash.new
-			@tokens = Hash.new
 
 			@players = Array.new
 			addplayer(BSG::BSGPlayer.new(self))
@@ -26,12 +25,18 @@ module BSG
 			@players << player
 		end
 		def startgame
+			@decks = Hash.new
+			@tokens = Hash.new
+			
 			# Populate the lists with available object
 			@boards = BSG::Locations::BoardList::build()
 			@decks[:skillcards] = BSG::Cards::SkillCardDecks::build()
 			@decks[:crisis] = BSG::Cards::CrisisDeck::build()
 			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
+			@jump = 0
+			@raiders = [ 0,0,0,0,0 ]
+			@resources = { :fuel => 8, :population => 12, :food => 10, :morale => 10 }
 			@characters = BSG::Characters::CharacterList::build()
 			@charavailable = @characters.keys
 
@@ -53,6 +58,14 @@ module BSG
 				@charavailable = @characters.keys
 			end
 		end
+		def playerturn
+			@currentplayer.draw	
+			print @currentplayer.movement
+			print @currentplayer.action
+			@currentplayer.crisis
+			@players.rotate!
+			@currentplayer = players[0]
+		end
 		def drawcard(args)
 			req = args[:spec]
 			draw = []
@@ -69,14 +82,26 @@ module BSG
 			print "Performing crisis \"#{card.name}\"\n"
 			print "Crisis Action \"#{card.crisis}\"\n"
 			print "Cylon Activation \"#{card.activation}\"\n"
-			print "Jump Status \"#{card.jump}\"\n"
+			if(card.jump)
+				dojump if ((@jump += 1) == 5)
+			end
 		end
-
+		def dojump
+			print "Jumping!\n"
+			@jump = 0
+		end
+		def docylon(args)
+			space = args[:board]
+			type = args[:activation]
+		end
+		def doskillcheck(args)
+			order = @players.rotate
+		end
 	end
 
 	# BSGPlayer class should handle all communication with players as well as player specific data maybe
 	class BSGPlayer
-		attr_reader :hand
+		attr_reader :hand, :offices, :character
 		def initialize(gameref)
 			@game = gameref
 			@character = nil
@@ -97,34 +122,28 @@ module BSG
 			@character = selected
 			return @character
 		end
+		def trigger(target)
+			return target.call(:game => @game, :player => self, :character => @character)
+		end
 		def checktriggers(trigger)
 			opts = Array.new
 			opts.concat(@hand.select { |i| i.trigger == trigger })
+			# Check for location abilities
+			# Check for loyalty card abilities
+			# Check for character abilities
 			return opts
 		end
-		def skilldraw
-			drawreq = Hash.new
-			@character.draw.each_pair { |k,v|
-				if k.kind_of?Array
-					key = ask(askprompt: 'Choose which card type to draw:', options: k)
-				end
-				key ||= k
-				drawreq[@game.decks[:skillcards][key]] = v
-			}
-			@hand.concat(@game.drawcard(:deck => :skillcards, :spec => drawreq))
+		def draw
+			return trigger(@character.method(:draw))
 		end
 		def movement
-			choices = @game.boards.map { |i| i.locations.select { |j| j.team == :human } }.flatten!
-			destination = ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name)
-			return @character.movement
+			return trigger(@character.method(:movement))
 		end
 		def action
-			choices = self.checktriggers(:action).map { |i| i.to_s }.concat(["Nothing"])
-			ask(askprompt: 'Which action would you like to perform:', options: choices)
-			return @character.action
+			return trigger(@character.method(:action))
 		end
 		def crisis
-			@game.docrisis(@game.drawcrisis(1)[0])
+			return trigger(@character.method(:crisis))
 		end
 	end
 end
@@ -137,9 +156,6 @@ end
 
 game.startgame
 
-game.players.each { |player|
-	player.skilldraw	
-	print player.movement
-	print player.action
-	player.crisis
-}
+3.times do
+	game.playerturn
+end

@@ -36,4 +36,17 @@ module BSG
 		Spec = [ :status ]
 		TokenData = { :status => :ready }
 	end
+	class GalacticaDamage < GenericToken
+		Spec = [ :status, :location ]
+		Tokendata = { :status => :ready }
+		def initialize(location)
+			super(:location => location)
+		end
+		def self.build
+			tokens = []
+			locations = [ :Armory, :HangerDeck, :Food, :Fuel, :AdmiralsQuarters, :WeaponsControl, :FTLControl, :Command ]
+			locations.each { |i| tokens << self.new(i) }
+			return tokens
+		end
+	end
 end

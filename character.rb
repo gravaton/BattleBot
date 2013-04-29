@@ -13,7 +13,7 @@ module BSG
 			end
 		end
 		class GenericCharacter
-			Spec = [ :name, :type, :draw, :loyalty ]
+			Spec = [ :name, :type, :skilldraw, :loyalty ]
 			def initialize(args = {})
 				args[:loyalty] = [1,1]
 				args = self.class::CharData.merge(args)
@@ -26,42 +26,61 @@ module BSG
 			def self.build
 				return self.new
 			end
-			def movement
-				return "Generic movement handler\n"
+			def draw(args)
+				drawreq = Hash.new
+				@skilldraw.each_pair { |k,v|
+					if k.kind_of?Array
+						key = args[:player].ask(askprompt: 'Choose which card type to draw', options: k)
+					end
+					key ||= k
+					drawreq[args[:game].decks[:skillcards][key]] = v
+				}
+				args[:player].hand.concat(args[:game].drawcard(:deck => :skillcards, :spec => drawreq))
 			end
-			def action
+			def movement(args)
+				choices = args[:game].boards.map { |i| i.locations.select { |j| j.team == :human } }.flatten!
+				destination = args[:player].ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name)
+				return destination
+			end
+			def action(args)
+				choices = args[:player].checktriggers(:action).map { |i| i.to_s }.concat(["Nothing"])
+				args[:player].ask(askprompt: 'Which action would you like to perform:', options: choices)
 				return "Generic action handler\n"
+			end
+			def crisis(args)
+				card = args[:game].drawcard(:spec => { args[:game].decks[:crisis] => 1 })[0]
+				args[:game].docrisis(card)
 			end
 		end
 		class GaiusBaltar < GenericCharacter
-			CharData = { :name => "Gaius Baltar", :type => :political, :draw => { yellow: 2, green: 1, blue: 1 }, :loyalty => [2,1]}
+			CharData = { :name => "Gaius Baltar", :type => :political, :skilldraw => { yellow: 2, green: 1, blue: 1 }, :loyalty => [2,1]}
 		end
 		class LauraRoslin < GenericCharacter
-			CharData = { :name => "Laura Roslin", :type => :political, :draw => { yellow: 3, green: 2 } }
+			CharData = { :name => "Laura Roslin", :type => :political, :skilldraw => { yellow: 3, green: 2 } }
 		end
 		class TomZarek < GenericCharacter
-			CharData = { :name => "Tom Zarek", :type => :political, :draw => { yellow: 2, green: 2, purple: 1 } }
+			CharData = { :name => "Tom Zarek", :type => :political, :skilldraw => { yellow: 2, green: 2, purple: 1 } }
 		end
 		class WilliamAdama < GenericCharacter
-			CharData = { :name => "William Adama", :type => :military, :draw => { purple: 2, green: 3 } }
+			CharData = { :name => "William Adama", :type => :military, :skilldraw => { purple: 2, green: 3 } }
 		end
 		class SaulTigh < GenericCharacter
-			CharData = { :name => "Saul Tigh", :type => :military, :draw => { purple: 3, green: 2 } }
+			CharData = { :name => "Saul Tigh", :type => :military, :skilldraw => { purple: 3, green: 2 } }
 		end
 		class KarlAgathon < GenericCharacter
-			CharData = { :name => "Karl \"Helo\" Agathon", :type => :military, :draw => { purple: 2, green: 2, red: 1 } }
+			CharData = { :name => "Karl \"Helo\" Agathon", :type => :military, :skilldraw => { purple: 2, green: 2, red: 1 } }
 		end
 		class KaraThrace < GenericCharacter
-			CharData = { :name => "Kara \"Starbuck\" Thrace", :type => :pilot, :draw => { purple: 2, red: 2, [ :green, :blue ] => 1 } }
+			CharData = { :name => "Kara \"Starbuck\" Thrace", :type => :pilot, :skilldraw => { purple: 2, red: 2, [ :green, :blue ] => 1 } }
 		end
 		class SharonValerii < GenericCharacter
-			CharData = { :name => "Sharon \"Boomer\" Valerii", :type => :pilot, :draw => { purple: 2, red: 2, blue: 1 }, :loyalty => [1,2] }
+			CharData = { :name => "Sharon \"Boomer\" Valerii", :type => :pilot, :skilldraw => { purple: 2, red: 2, blue: 1 }, :loyalty => [1,2] }
 		end
 		class LeeAdama < GenericCharacter
-			CharData = { :name => "Lee \"Apollo\" Adama", :type => :pilot, :draw => { red: 2, [ :green, :yellow ] => 2, purple: 1 } }
+			CharData = { :name => "Lee \"Apollo\" Adama", :type => :pilot, :skilldraw => { red: 2, [ :green, :yellow ] => 2, purple: 1 } }
 		end
 		class GalenTyrol < GenericCharacter
-			CharData = { :name => "\"Chief\" Galen Tyrol", :type => :support, :draw => { blue: 2, green: 2, yellow: 1 } }
+			CharData = { :name => "\"Chief\" Galen Tyrol", :type => :support, :skilldraw => { blue: 2, green: 2, yellow: 1 } }
 		end
 	end
 end

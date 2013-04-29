@@ -114,7 +114,7 @@ module Locations
 		BoardData = { :name => "Cylon Actions", :locations => [ :Caprica, :CylonFleet, :HumanFleet, :ResurrectionShip ] }
 	end
 	class SpaceBoard < GenericBoard
-		BoardData = { :name => "Space Locations", :locations => [ :SpaceLocation, :SpaceLocation, :SpaceLocation, :SpaceLocation, :SpaceLocation, :SpaceLocation, :SpaceLocation ] }
+		BoardData = { :name => "Space Locations", :locations => [ :SpaceLocation, :SpaceLocation, :SpaceLocation, :SpaceLocation, :SpaceLocation ] }
 	end
 end
 end
