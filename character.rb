@@ -14,7 +14,7 @@ module BSG
 		end
 		class GenericCharacter
 			attr_reader :currentloc
-			Spec = [ :name, :type, :skilldraw, :loyalty ]
+			Spec = [ :name, :type, :skilldraw, :loyalty, :startloc ]
 			def initialize(args = {})
 				args[:loyalty] = [1,1]
 				args = self.class::CharData.merge(args)
@@ -40,16 +40,18 @@ module BSG
 			end
 			def movement(args)
 				choices = args[:game].boards.map { |i| i.locations.select { |j| j.team == :human } }.flatten!
-				destination = args[:player].ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name)
-				@currentloc = destination
+				args[:destination] ||= args[:player].ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name)
+				@currentloc = args[:destination]
 				# Discard a card if you moved ships!
-				return destination
+				# Tell the location that you arrived there!
+				print "#{@name} moves to #{@currentloc}\n"
+				return args[:destination]
 			end
 			def action(args)
 				choices = args[:player].checktriggers(:action)
 				object = args[:player].ask(askprompt: 'Which action would you like to perform:', options: choices.keys.concat(["Nothing"]))
 				return if object == "Nothing"
-				args[:player].trigger(object.method(choices[object]))
+				args[:player].execute(:target => object.method(choices[object]))
 				return "Generic action handler\n"
 			end
 			def crisis(args)
@@ -58,34 +60,34 @@ module BSG
 			end
 		end
 		class GaiusBaltar < GenericCharacter
-			CharData = { :name => "Gaius Baltar", :type => :political, :skilldraw => { yellow: 2, green: 1, blue: 1 }, :loyalty => [2,1]}
+			CharData = { :name => "Gaius Baltar", :type => :political, :skilldraw => { yellow: 2, green: 1, blue: 1 }, :loyalty => [2,1], :startloc => :HangerDeck }
 		end
 		class LauraRoslin < GenericCharacter
-			CharData = { :name => "Laura Roslin", :type => :political, :skilldraw => { yellow: 3, green: 2 } }
+			CharData = { :name => "Laura Roslin", :type => :political, :skilldraw => { yellow: 3, green: 2 }, :startloc => :HangerDeck}
 		end
 		class TomZarek < GenericCharacter
-			CharData = { :name => "Tom Zarek", :type => :political, :skilldraw => { yellow: 2, green: 2, purple: 1 } }
+			CharData = { :name => "Tom Zarek", :type => :political, :skilldraw => { yellow: 2, green: 2, purple: 1 }, :startloc => :HangerDeck}
 		end
 		class WilliamAdama < GenericCharacter
-			CharData = { :name => "William Adama", :type => :military, :skilldraw => { purple: 2, green: 3 } }
+			CharData = { :name => "William Adama", :type => :military, :skilldraw => { purple: 2, green: 3 }, :startloc => :HangerDeck}
 		end
 		class SaulTigh < GenericCharacter
-			CharData = { :name => "Saul Tigh", :type => :military, :skilldraw => { purple: 3, green: 2 } }
+			CharData = { :name => "Saul Tigh", :type => :military, :skilldraw => { purple: 3, green: 2 }, :startloc => :HangerDeck}
 		end
 		class KarlAgathon < GenericCharacter
-			CharData = { :name => "Karl \"Helo\" Agathon", :type => :military, :skilldraw => { purple: 2, green: 2, red: 1 } }
+			CharData = { :name => "Karl \"Helo\" Agathon", :type => :military, :skilldraw => { purple: 2, green: 2, red: 1 }, :startloc => :HangerDeck}
 		end
 		class KaraThrace < GenericCharacter
-			CharData = { :name => "Kara \"Starbuck\" Thrace", :type => :pilot, :skilldraw => { purple: 2, red: 2, [ :green, :blue ] => 1 } }
+			CharData = { :name => "Kara \"Starbuck\" Thrace", :type => :pilot, :skilldraw => { purple: 2, red: 2, [ :green, :blue ] => 1 }, :startloc => :HangerDeck}
 		end
 		class SharonValerii < GenericCharacter
-			CharData = { :name => "Sharon \"Boomer\" Valerii", :type => :pilot, :skilldraw => { purple: 2, red: 2, blue: 1 }, :loyalty => [1,2] }
+			CharData = { :name => "Sharon \"Boomer\" Valerii", :type => :pilot, :skilldraw => { purple: 2, red: 2, blue: 1 }, :loyalty => [1,2], :startloc => :HangerDeck}
 		end
 		class LeeAdama < GenericCharacter
-			CharData = { :name => "Lee \"Apollo\" Adama", :type => :pilot, :skilldraw => { red: 2, [ :green, :yellow ] => 2, purple: 1 } }
+			CharData = { :name => "Lee \"Apollo\" Adama", :type => :pilot, :skilldraw => { red: 2, [ :green, :yellow ] => 2, purple: 1 }, :startloc => :HangerDeck}
 		end
 		class GalenTyrol < GenericCharacter
-			CharData = { :name => "\"Chief\" Galen Tyrol", :type => :support, :skilldraw => { blue: 2, green: 2, yellow: 1 } }
+			CharData = { :name => "\"Chief\" Galen Tyrol", :type => :support, :skilldraw => { blue: 2, green: 2, yellow: 1 }, :startloc => :HangerDeck}
 		end
 	end
 end

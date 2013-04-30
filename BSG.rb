@@ -59,6 +59,7 @@ module BSG
 			end
 		end
 		def playerturn
+			print "#{@currentplayer.character.name}'s Turn Begins!\n"
 			@currentplayer.draw	
 			@currentplayer.movement
 			print @currentplayer.action
@@ -120,30 +121,39 @@ module BSG
 			selected = ask(askprompt: 'Choose your character:', options: opts, attr: :name)
 			print "Selecting #{selected}\n"
 			@character = selected
+			startloc = @game.boards.map { |i| i.locations.select { |j| j.kind_of?BSG::Locations.const_get(@character.startloc) } }[0]
+			execute(:target => @character.method(:movement), :destination => startloc)
 			return @character
 		end
-		def trigger(target)
-			return target.call(:game => @game, :player => self, :character => @character)
+		def execute(args)
+			params = {:game => @game, :player => self, :character => @character}.merge(args)
+			return args[:target].call(params)
 		end
 		def checktriggers(trigger)
 			opts = Hash.new
-			@hand.each { |i| opts.update(i.gettrigger(:trigger => trigger)) }
-			opts.update(@character.currentloc.gettrigger(:trigger => trigger))
+			@hand.each { |i| opts.update(execute( :target => i.method(:gettrigger), :trigger => trigger)) }
+			opts.update(execute( :target => @character.currentloc.method(:gettrigger), :trigger => trigger))
 			# Check for loyalty card abilities
 			# Check for character abilities
 			return opts
 		end
+		def dispatch(verb)
+			if @currentlocation.status == :restricted
+				verb = (@currentlocation.respond_to?verb ? @currentlocation.method(verb) : @character.method(verb))
+			end
+			return execute(:target => verb)
+		end
 		def draw
-			return trigger(@character.method(:draw))
+			return execute(:target => @character.method(:draw))
 		end
 		def movement
-			return trigger(@character.method(:movement))
+			return execute(:target => @character.method(:movement))
 		end
 		def action
-			return trigger(@character.method(:action))
+			return execute(:target => @character.method(:action))
 		end
 		def crisis
-			return trigger(@character.method(:crisis))
+			return execute(:target => @character.method(:crisis))
 		end
 	end
 end

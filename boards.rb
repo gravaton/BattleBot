@@ -14,10 +14,11 @@ module Locations
 			}
 		end
 		def action(args)
-			print "GenericLocation::action has been called\n"
+			print "#{self.class}::action has been called\n"
 		end
 		def gettrigger(args)
 			method = Hash.new
+			return method if @status == :damaged
 			if (@trigger.has_key?args[:trigger])
 				method[self] = @trigger[args[:trigger]]
 			end
@@ -73,6 +74,10 @@ module Locations
 	end
 	class FTLControl < GenericLocation
 		LocData = LocData.merge({ :name => "FTL Control", :team => :human, :status => :available })
+		def gettrigger(args)
+			return {} if args[:game].jump < 3
+			return super
+		end
 	end
 
 	# Cylon locations
