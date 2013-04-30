@@ -60,7 +60,7 @@ module BSG
 		end
 		def playerturn
 			@currentplayer.draw	
-			print @currentplayer.movement
+			@currentplayer.movement
 			print @currentplayer.action
 			@currentplayer.crisis
 			@players.rotate!
@@ -128,7 +128,7 @@ module BSG
 		def checktriggers(trigger)
 			opts = Hash.new
 			@hand.each { |i| opts.update(i.gettrigger(:trigger => trigger)) }
-			# Check for location abilities
+			opts.update(@character.currentloc.gettrigger(:trigger => trigger))
 			# Check for loyalty card abilities
 			# Check for character abilities
 			return opts

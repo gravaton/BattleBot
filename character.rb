@@ -13,6 +13,7 @@ module BSG
 			end
 		end
 		class GenericCharacter
+			attr_reader :currentloc
 			Spec = [ :name, :type, :skilldraw, :loyalty ]
 			def initialize(args = {})
 				args[:loyalty] = [1,1]
@@ -40,6 +41,7 @@ module BSG
 			def movement(args)
 				choices = args[:game].boards.map { |i| i.locations.select { |j| j.team == :human } }.flatten!
 				destination = args[:player].ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name)
+				@currentloc = destination
 				# Discard a card if you moved ships!
 				return destination
 			end

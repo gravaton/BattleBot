@@ -3,8 +3,8 @@
 module BSG
 module Locations
 	class GenericLocation
-		LocData = {:events => {:action => :action }}
-		Spec = [ :name, :team, :status ]
+		LocData = { :trigger => {:action => :action }}
+		Spec = [ :name, :team, :status, :trigger ]
 		def initialize(args = {})
 			args = self.class::LocData.merge(args)
 			raise "Mismatched location spec" unless self.class::Spec.sort == args.keys.sort
@@ -14,7 +14,17 @@ module Locations
 			}
 		end
 		def action(args)
-			return "Generic action handler"
+			print "GenericLocation::action has been called\n"
+		end
+		def gettrigger(args)
+			method = Hash.new
+			if (@trigger.has_key?args[:trigger])
+				method[self] = @trigger[args[:trigger]]
+			end
+			return method
+		end
+		def to_s
+			return "LOCATION - #{@name}"
 		end
 		def self.build
 			return self.new
@@ -22,64 +32,66 @@ module Locations
 	end
 	# Colonial One
 	class PressRoom < GenericLocation
-		LocData = { :name => "Press Room", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "Press Room", :team => :human, :status => :available })
 	end
 	class PresidentsOffice < GenericLocation
-		LocData = { :name => "President's Office", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "President's Office", :team => :human, :status => :available })
 	end
 	class Administration < GenericLocation
-		LocData = { :name => "Administration", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "Administration", :team => :human, :status => :available })
 	end
 
 	# Galactica
 	class Sickbay < GenericLocation
-		LocData = { :name => "Sickbay", :team => :human, :status => :restricted }
+		LocData = { :name => "Sickbay", :team => :human, :status => :restricted, :trigger => { :draw => :sickdraw } }
+		def sickdraw
+		end
 	end
 	class Brig < GenericLocation
-		LocData = { :name => "Brig", :team => :human, :status => :restricted }
+		LocData = LocData.merge({ :name => "Brig", :team => :human, :status => :restricted })
 	end
 	class Armory < GenericLocation
-		LocData = { :name => "Armory", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "Armory", :team => :human, :status => :available })
 	end
 	class ResearchLab < GenericLocation
-		LocData = { :name => "Research Lab", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "Research Lab", :team => :human, :status => :available })
 	end
 	class HangerDeck < GenericLocation
-		LocData = { :name => "Hanger Deck", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "Hanger Deck", :team => :human, :status => :available })
 	end
 	class Communications < GenericLocation
-		LocData = { :name => "Communications", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "Communications", :team => :human, :status => :available })
 	end
 	class AdmiralsQuarters < GenericLocation
-		LocData = { :name => "Admiral's Quarters", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "Admiral's Quarters", :team => :human, :status => :available })
 	end
 	class WeaponsControl < GenericLocation
-		LocData = { :name => "Weapons Control", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "Weapons Control", :team => :human, :status => :available })
 	end
 	class Command < GenericLocation
-		LocData = { :name => "Command", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "Command", :team => :human, :status => :available })
 	end
 	class FTLControl < GenericLocation
-		LocData = { :name => "FTL Control", :team => :human, :status => :available }
+		LocData = LocData.merge({ :name => "FTL Control", :team => :human, :status => :available })
 	end
 
 	# Cylon locations
 	class Caprica < GenericLocation
-		LocData = { :name => "Caprica", :team => :cylon, :status => :available }
+		LocData = LocData.merge({ :name => "Caprica", :team => :cylon, :status => :available })
 	end
 	class CylonFleet < GenericLocation
-		LocData = { :name => "Cylon Fleet", :team => :cylon, :status => :available }
+		LocData = LocData.merge({ :name => "Cylon Fleet", :team => :cylon, :status => :available })
 	end
 	class HumanFleet < GenericLocation
-		LocData = { :name => "Human Fleet", :team => :cylon, :status => :available }
+		LocData = LocData.merge({ :name => "Human Fleet", :team => :cylon, :status => :available })
 	end
 	class ResurrectionShip < GenericLocation
-		LocData = { :name => "Resurrection Ship", :team => :cylon, :status => :available }
+		LocData = LocData.merge({ :name => "Resurrection Ship", :team => :cylon, :status => :available })
 	end
 
 	# Space Locations
 	class SpaceLocation < GenericLocation
-		LocData = { :name => "Space location", :team => :space, :status => :available }
+		LocData = LocData.merge({ :name => "Space location", :team => :space, :status => :available })
 	end
 
 	# Gameboards
