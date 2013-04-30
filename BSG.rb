@@ -60,10 +60,14 @@ module BSG
 		end
 		def playerturn
 			print "#{@currentplayer.character.name}'s Turn Begins!\n"
-			@currentplayer.draw	
-			@currentplayer.movement
-			print @currentplayer.action
-			@currentplayer.crisis
+			@currentplayer.dispatch(:draw)
+			@currentplayer.dispatch(:movement)
+			@currentplayer.dispatch(:action)
+			@currentplayer.dispatch(:crisis)
+			#@currentplayer.draw	
+			#@currentplayer.movement
+			#print @currentplayer.action
+			#@currentplayer.crisis
 			@players.rotate!
 			@currentplayer = players[0]
 		end
@@ -121,7 +125,7 @@ module BSG
 			selected = ask(askprompt: 'Choose your character:', options: opts, attr: :name)
 			print "Selecting #{selected}\n"
 			@character = selected
-			startloc = @game.boards.map { |i| i.locations.select { |j| j.kind_of?BSG::Locations.const_get(@character.startloc) } }[0]
+			startloc = @game.boards.map { |i| i.locations.select { |j| j.kind_of?BSG::Locations.const_get(@character.startloc) } }.flatten[0]
 			execute(:target => @character.method(:movement), :destination => startloc)
 			return @character
 		end
@@ -138,22 +142,12 @@ module BSG
 			return opts
 		end
 		def dispatch(verb)
-			if @currentlocation.status == :restricted
-				verb = (@currentlocation.respond_to?verb ? @currentlocation.method(verb) : @character.method(verb))
+			if (@character.currentloc.status == :restricted and @character.currentloc.respond_to?verb)
+				verb = @character.currentloc.method(verb)
+			else
+				verb = @character.method(verb)
 			end
 			return execute(:target => verb)
-		end
-		def draw
-			return execute(:target => @character.method(:draw))
-		end
-		def movement
-			return execute(:target => @character.method(:movement))
-		end
-		def action
-			return execute(:target => @character.method(:action))
-		end
-		def crisis
-			return execute(:target => @character.method(:crisis))
 		end
 	end
 end

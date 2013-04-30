@@ -3,7 +3,7 @@
 module BSG
 module Locations
 	class GenericLocation
-		LocData = { :trigger => {:action => :action }}
+		LocData = { :trigger => { :action => :action } }
 		Spec = [ :name, :team, :status, :trigger ]
 		def initialize(args = {})
 			args = self.class::LocData.merge(args)
