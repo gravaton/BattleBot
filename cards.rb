@@ -48,11 +48,13 @@ module Cards
 			}
 		end
 		def gettrigger(args)
-			method = Hash.new
-			if( (trigs = self.instance_variable_get("@trigger")).kind_of?Hash)
-				method[self] = trigs[args[:trigger]]
+			print "HI GETTRIGGER GOT CALLED\n"
+			events = Hash.new
+			# Check that Trigger is Hashkind because I haven't fixed all the triggers yet
+			if((defined? @trigger) and (@trigger.kind_of?Hash) and (@trigger.has_key?(args[:trigger])))
+				events[self] = trigs[args[:trigger]]
 			end
-			return method
+			return events
 		end
 		def fizzle(args)
 			# I suppose we can use this for "no effect" results
@@ -181,46 +183,98 @@ module Cards
 	end
 	class ExecutiveOrder < SkillCard
 		CardValues = { 1 => 8, 2 => 6 }
-		CardData = { :name => "Executive Order", :trigger => { :action => BSG::GameEvent.new(:text => "Executive Order Text", :message => :action) }, :color => :green }
-		def action(args)
+		CardText = "Executive Order text goes here"
+		CardData = {
+			:name => "Executive Order",
+			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
+			:color => :green
+		}
+		def cardaction(args)
 			print "Executive Order!\n"
 		end
 	end
 	class DeclareEmergency < SkillCard
 		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
-		CardData = { :name => "Executive Order", :trigger => :postskillcheck, :color => :green }
+		CardText = "Declare Emergency text goes here"
+		CardData = {
+			:name => "Declare Emergency",
+			:trigger => { :postskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
+			:color => :green
+		}
+		def cardaction(args)
+		end
 	end
 	class ConsolidatePower < SkillCard
 		CardValues = { 1 => 8, 2 => 6 }
-		CardData = { :name => "Consolidate Power", :trigger => :action, :color => :yellow }
+		CardText = "Consolidate Power text goes here"
+		CardData = {
+			:name => "Consolidate Power",
+			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:color => :yellow
+		}
 	end
 	class InvestigativeCommitte < SkillCard
 		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
-		CardData = { :name => "Investigative Committe", :trigger => :preskillcheck, :color => :yellow }
+		CardText = "Investigative Committe text goes here"
+		CardData = {
+			:name => "Investigative Committe",
+			:trigger => { :preskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:color => :yellow
+		}
 	end
 	class LaunchScout < SkillCard
 		CardValues = { 1 => 8, 2 => 6 }
-		CardData = { :name => "Launch Scout", :trigger => :action, :color => :purple }
+		CardText = "Launch Scout text goes here"
+		CardData = {
+			:name => "Launch Scout",
+			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:color => :purple
+		}
 	end
 	class StrategicPlanning < SkillCard
 		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
-		CardData = { :name => "Strategic Planning", :trigger => :predieroll, :color => :purple }
+		CardText = "Strategic Planning text goes here"
+		CardData = {
+			:name => "Strategic Planning",
+			:trigger => { :predieroll => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:color => :purple
+		}
 	end
 	class EvasiveManeuvers < SkillCard
 		CardValues = { 1 => 8, 2 => 6 }
-		CardData = { :name => "Evasive Maneuvers", :trigger => :afterraiderfire, :color => :red }
+		CardText = "Evasive Maneuvers text goes here"
+		CardData = {
+			:name => "Evasive Maneuvers",
+			:trigger => { :postraiderfire => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:color => :red
+		}
 	end
 	class MaximumFirepower < SkillCard
 		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
-		CardData = { :name => "Maximum Firepower", :trigger => :action, :color => :red }
+		CardText = "Maximum Firepower text goes here"
+		CardData = {
+			:name => "Maximum Firepower",
+			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:color => :red
+		}
 	end
 	class Repair < SkillCard
 		CardValues = { 1 => 8, 2 => 6 }
-		CardData = { :name => "Repair", :trigger => :action, :color => :blue }
+		CardText = "Repair text goes here"
+		CardData = {
+			:name => "Repair",
+			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:color => :blue
+		}
 	end
 	class ScientificResearch < SkillCard
 		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
-		CardData = { :name => "Scientific Research", :trigger => :preskillcheck, :color => :blue }
+		CardText = "Scientific Research text goes here"
+		CardData = {
+			:name => "Scientific Research",
+			:trigger => { :preskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:color => :blue
+		}
 	end
 end
 end
