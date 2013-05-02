@@ -1,5 +1,7 @@
 #!/usr/local/bin/ruby
 
+require './actions.rb'
+
 module BSG
 module Cards
 	class Deck
@@ -52,6 +54,9 @@ module Cards
 			end
 			return method
 		end
+		def fizzle(args)
+			# I suppose we can use this for "no effect" results
+		end
 	end
 
 	# Loyalty Cards
@@ -92,16 +97,50 @@ module Cards
 	end
 	class CrisisCard < GenericCard
 		Spec = [:name, :crisis, :activation, :jump]
+		def crisis
+			case @crisis.class
+			when BSG::GameChoice
+				print "Choice\n"
+			when BSG::SkillCheck
+				print "Skillcheck\n"
+			when BSG::GameEvent
+				print "Event\n"
+			end
+		end
+		def activation
+		end
+		def jump
+		end
 		def self.build()
 			return self.new
 		end
 	end
 	class SampleCrisis < CrisisCard
+		CheckSpec = {
+			:positive => [ :yellow, :green, :blue ],
+			:outcomes => {
+				10 => BSG::GameEvent.new( :text => "No Effect", :message => :fizzle ),
+				5 => BSG::GameEvent.new( :text => "Semi-fail", :message => :semifail),
+				:fail => BSG::GameEvent.new( :text => "Fail", :message => :fail)
+			}
+		}
+		ChoiceSpec = [ BSG::SkillCheck.new(CheckSpec), BSG::GameEvent.new( :text => "Generic Selectable Event", :message => :fizzle) ]
+		CardData = {
+			:name => "Generic Crisis",
+			:crisis => BSG::GameChoice.new( :options => ChoiceSpec ),
+			:activation => :raiders,
+			:jump => true
+		}
 		# For now I'm going to return 10 of these cards
 		def self.build()
 			return Array.new(10, self.new)
 		end
-		CardData = { :name => "Generic Crisis", :crisis => "Bad stuff!", :activation => :raiders, :jump => true }
+		def semifail
+			print "Semifail\n"
+		end
+		def fail
+			print "Fail\n"
+		end
 	end
 
 	# Skill Cards
@@ -142,7 +181,7 @@ module Cards
 	end
 	class ExecutiveOrder < SkillCard
 		CardValues = { 1 => 8, 2 => 6 }
-		CardData = { :name => "Executive Order", :trigger => { :action => :action }, :color => :green }
+		CardData = { :name => "Executive Order", :trigger => { :action => BSG::GameEvent.new(:text => "Executive Order Text", :message => :action) }, :color => :green }
 		def action(args)
 			print "Executive Order!\n"
 		end

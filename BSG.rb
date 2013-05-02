@@ -1,5 +1,6 @@
 #!/usr/local/bin/ruby
 
+require './actions.rb'
 require './character.rb'
 require './cards.rb'
 require './tokens.rb'
@@ -64,10 +65,6 @@ module BSG
 			@currentplayer.dispatch(:movement)
 			@currentplayer.dispatch(:action)
 			@currentplayer.dispatch(:crisis)
-			#@currentplayer.draw	
-			#@currentplayer.movement
-			#print @currentplayer.action
-			#@currentplayer.crisis
 			@players.rotate!
 			@currentplayer = players[0]
 		end
@@ -79,21 +76,17 @@ module BSG
 			}
 			return draw
 		end
-		def drawcrisis(num)
-			return @decks[:crisis].draw(1)
-			print "Draw request for #{num} crisis cards\n"
-		end
 		def docrisis(card)
 			print "Performing crisis \"#{card.name}\"\n"
 			print "Crisis Action \"#{card.crisis}\"\n"
 			print "Cylon Activation \"#{card.activation}\"\n"
-			if(card.jump)
-				dojump if ((@jump += 1) == 5)
-			end
+			dojump if card.jump
 		end
 		def dojump
-			print "Jumping!\n"
-			@jump = 0
+			if((@jump += 1) == 5)
+				print "Jumping!\n"
+				@jump = 0
+			end
 		end
 		def docylon(args)
 			space = args[:board]
@@ -101,6 +94,12 @@ module BSG
 		end
 		def doskillcheck(args)
 			order = @players.rotate
+			# Perform any pre-skill-check actions that might modify the skill check
+			# Destiny deck is contributed to the skill check
+			# Players contribute cards to the skill check - (Could be modified to make this open)
+			# Cards are shuffled, revealed and counted - (Expansions can have happenings occur here)
+			# Perform any post-skill-check actions that might modify the skill check
+			# Execute the result of the skill check
 		end
 	end
 

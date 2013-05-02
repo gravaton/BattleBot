@@ -51,7 +51,8 @@ module BSG
 				choices = args[:player].checktriggers(:action)
 				object = args[:player].ask(askprompt: 'Which action would you like to perform:', options: choices.keys.concat(["Nothing"]))
 				return if object == "Nothing"
-				args[:player].execute(:target => object.method(choices[object]))
+				print "Card Test: #{choices[object].text}\n"
+				args[:player].execute(:target => object.method(choices[object].message))
 				return "Generic action handler\n"
 			end
 			def crisis(args)
