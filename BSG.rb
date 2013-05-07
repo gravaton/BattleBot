@@ -95,10 +95,16 @@ module BSG
 		def doskillcheck(args)
 			order = @players.rotate
 			# Perform any pre-skill-check actions that might modify the skill check
+			order.each { |player| print "Pre skillcheck for #{player}\n" }
 			# Destiny deck is contributed to the skill check
 			# Players contribute cards to the skill check - (Could be modified to make this open)
+			order.each { |player|
+				contrib = ask(askprompt: 'Contribute cards to skill check:', options: player.hand, count: player.hand.length, donothing: true)
+				print "Player contributed #{contrib}\n"
+			}
 			# Cards are shuffled, revealed and counted - (Expansions can have happenings occur here)
 			# Perform any post-skill-check actions that might modify the skill check
+			order.each { |player| print "Post skillcheck for #{player}\n" }
 			# Execute the result of the skill check
 		end
 	end
@@ -121,7 +127,7 @@ module BSG
 			askparams[:donothing] ||= false
 			askparams[:nothingprompt] ||= "Complete Selection"
 
-			selections = []
+			selections = Array.new
 			opts = askparams[:options]
 			askparams[:count].times {
 				print askparams[:askprompt], "\n"
@@ -133,13 +139,20 @@ module BSG
 				opts.delete_at(sel)
 			}
 			return selections
-			return (selections.length > 1 ? selections : selections[0])
 		end
 		def choosechar(opts)
 			selected = ask(askprompt: 'Choose your character:', options: opts, attr: :name)[0]
 			print "Selecting #{selected}\n"
 			@character = selected
-			startloc = @game.boards.map { |i| i.locations.select { |j| j.kind_of?BSG::Locations.const_get(@character.startloc) } }.flatten[0]
+			# Perform initial draw
+			drawopts = Array.new
+			@character.skilldraw.each_pair { |k,v|
+				v.times { drawopts << k }
+			}
+			initdraw = ask(askprompt: 'Choose your initial draw:', options: drawopts.flatten, count: 3)
+			print "Initdraw: #{initdraw}\n"
+			# Put the character in their starting location
+			startloc = @game.boards.values.map { |i| i.locations.values.select { |j| j.kind_of?BSG::Locations.const_get(@character.startloc) } }.flatten[0]
 			execute(:target => @character.method(:movement), :destination => startloc)
 			return @character
 		end

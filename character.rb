@@ -16,8 +16,8 @@ module BSG
 			attr_reader :currentloc
 			Spec = [ :name, :type, :skilldraw, :loyalty, :startloc ]
 			def initialize(args = {})
-				args[:loyalty] = [1,1]
 				args = self.class::CharData.merge(args)
+				args[:loyalty] ||= [1,1]
 				raise "Mismatched character spec" unless self.class::Spec.sort == args.keys.sort
 				args.each_pair { |key, value|
 					self.instance_variable_set("@#{key.to_s}", value)
@@ -38,9 +38,12 @@ module BSG
 				}
 				args[:player].hand.concat(args[:game].drawcard(:deck => :skillcards, :spec => drawreq))
 			end
+			def discard(args)
+				# Have the player select a number of cards from their hand
+			end
 			def movement(args)
-				choices = args[:game].boards.map { |i| i.locations.select { |j| j.team == :human } }.flatten!
-				args[:destination] ||= args[:player].ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name, donothing: true, nothingprompt: "Do not move")[0]
+				choices = args[:game].boards.values.map { |i| i.locations.values.select { |j| j.team == :human } }.flatten!
+				args[:destination] ||= args[:player].ask(askprompt: 'Choose destination location:', options: choices, attr: :name, donothing: true, nothingprompt: "Do not move")[0]
 				return if args[:destination] == nil
 				
 				@currentloc = args[:destination]
@@ -51,9 +54,9 @@ module BSG
 			end
 			def action(args)
 				choices = args[:player].checktriggers(:action)
-				object = args[:player].ask(askprompt: 'Which action would you like to perform:', options: choices.keys.concat(["Nothing"]))[0]
-				return if object == "Nothing"
-				print "Card Test: #{choices[object].text}\n"
+				object = args[:player].ask(askprompt: 'Choose action:', options: choices, donothing: true, nothingprompt: "No action")[0]
+				return if object == nil
+				print "Card Text: #{choices[object].text}\n"
 				args[:player].execute(:target => object.method(choices[object].message))
 				return "Generic action handler\n"
 			end
