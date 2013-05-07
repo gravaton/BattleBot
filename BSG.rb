@@ -9,14 +9,14 @@ require './boards.rb'
 
 module BSG
 	class BSGGame
-		attr_reader :players, :currentplayer, :options, :characters, :status, :boards, :decks
+		attr_reader :players, :currentplayer, :options, :characters, :status, :resources, :centurions, :boards, :decks
 		attr_accessor :jump
 	
-		def initialize(args = nil)
+		def initialize(args = {})
 			# Somewhere in here we want to set the game options and figure out hwo that all works
 			@status = :forming
-			@options = []
-
+			@options = {}
+			# Allow for player association/signup in here, add one player by default
 			@players = Array.new
 			addplayer(BSG::BSGPlayer.new(self))
 			@currentplayer = players[0]
@@ -29,16 +29,20 @@ module BSG
 			@decks = Hash.new
 			@tokens = Hash.new
 			
-			# Populate the lists with available object
+			# Build our lists and decks based on available objects
 			@boards = BSG::Locations::BoardList::build()
 			@decks[:skillcards] = BSG::Cards::SkillCardDecks::build()
 			@decks[:crisis] = BSG::Cards::CrisisDeck::build()
+			@characters = BSG::Characters::CharacterList::build()
+
+			# Tokens aren't quite in order yet
 			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
+
+			# Set game-wide vairables
 			@jump = 0
-			@raiders = [ 0,0,0,0,0 ]
+			@centurions = [ 0,0,0,0,0 ]
 			@resources = { :fuel => 8, :population => 12, :food => 10, :morale => 10 }
-			@characters = BSG::Characters::CharacterList::build()
 			@charavailable = @characters.keys
 
 			# Shuffle our players and let them pick their character
@@ -47,6 +51,8 @@ module BSG
 			@players.each { |p|
 				choosechar(p)
 			}
+
+			# Now the game is in progress
 			@status = :playing
 		end
 		def choosechar(playerobj)
@@ -144,6 +150,7 @@ module BSG
 			selected = ask(askprompt: 'Choose your character:', options: opts, attr: :name)[0]
 			print "Selecting #{selected}\n"
 			@character = selected
+
 			# Perform initial draw
 			drawopts = Array.new
 			@character.skilldraw.each_pair { |k,v|
@@ -151,6 +158,7 @@ module BSG
 			}
 			initdraw = ask(askprompt: 'Choose your initial draw:', options: drawopts.flatten, count: 3)
 			print "Initdraw: #{initdraw}\n"
+
 			# Put the character in their starting location
 			startloc = @game.boards.values.map { |i| i.locations.values.select { |j| j.kind_of?BSG::Locations.const_get(@character.startloc) } }.flatten[0]
 			execute(:target => @character.method(:movement), :destination => startloc)
