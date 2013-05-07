@@ -31,7 +31,7 @@ module BSG
 				drawreq = Hash.new
 				@skilldraw.each_pair { |k,v|
 					if k.kind_of?Array
-						key = args[:player].ask(askprompt: 'Choose which card type to draw', options: k)
+						key = args[:player].ask(askprompt: 'Choose which card type to draw', options: k)[0]
 					end
 					key ||= k
 					drawreq[args[:game].decks[:skillcards][key]] = v
@@ -40,7 +40,9 @@ module BSG
 			end
 			def movement(args)
 				choices = args[:game].boards.map { |i| i.locations.select { |j| j.team == :human } }.flatten!
-				args[:destination] ||= args[:player].ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name)
+				args[:destination] ||= args[:player].ask(askprompt: 'Choose which location to go to:', options: choices, attr: :name, donothing: true, nothingprompt: "Do not move")[0]
+				return if args[:destination] == nil
+				
 				@currentloc = args[:destination]
 				# Discard a card if you moved ships!
 				# Tell the location that you arrived there!
@@ -49,7 +51,7 @@ module BSG
 			end
 			def action(args)
 				choices = args[:player].checktriggers(:action)
-				object = args[:player].ask(askprompt: 'Which action would you like to perform:', options: choices.keys.concat(["Nothing"]))
+				object = args[:player].ask(askprompt: 'Which action would you like to perform:', options: choices.keys.concat(["Nothing"]))[0]
 				return if object == "Nothing"
 				print "Card Test: #{choices[object].text}\n"
 				args[:player].execute(:target => object.method(choices[object].message))

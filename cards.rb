@@ -48,11 +48,10 @@ module Cards
 			}
 		end
 		def gettrigger(args)
-			print "HI GETTRIGGER GOT CALLED\n"
 			events = Hash.new
 			# Check that Trigger is Hashkind because I haven't fixed all the triggers yet
 			if((defined? @trigger) and (@trigger.kind_of?Hash) and (@trigger.has_key?(args[:trigger])))
-				events[self] = trigs[args[:trigger]]
+				events[self] = @trigger[args[:trigger]]
 			end
 			return events
 		end
@@ -177,6 +176,9 @@ module Cards
 			}
 			return cards
 		end
+		def cardaction(args)
+			print "Generic Card Action, should never be seen!\n"
+		end
 		def to_s
 			return "[#{@value}|#{@color.to_s.upcase}] - #{@name}"
 		end
@@ -209,7 +211,7 @@ module Cards
 		CardText = "Consolidate Power text goes here"
 		CardData = {
 			:name => "Consolidate Power",
-			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :yellow
 		}
 	end
@@ -218,7 +220,7 @@ module Cards
 		CardText = "Investigative Committe text goes here"
 		CardData = {
 			:name => "Investigative Committe",
-			:trigger => { :preskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:trigger => { :preskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :yellow
 		}
 	end
@@ -227,7 +229,7 @@ module Cards
 		CardText = "Launch Scout text goes here"
 		CardData = {
 			:name => "Launch Scout",
-			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :purple
 		}
 	end
@@ -236,7 +238,7 @@ module Cards
 		CardText = "Strategic Planning text goes here"
 		CardData = {
 			:name => "Strategic Planning",
-			:trigger => { :predieroll => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:trigger => { :predieroll => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :purple
 		}
 	end
@@ -245,7 +247,7 @@ module Cards
 		CardText = "Evasive Maneuvers text goes here"
 		CardData = {
 			:name => "Evasive Maneuvers",
-			:trigger => { :postraiderfire => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:trigger => { :postraiderfire => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :red
 		}
 	end
@@ -254,7 +256,7 @@ module Cards
 		CardText = "Maximum Firepower text goes here"
 		CardData = {
 			:name => "Maximum Firepower",
-			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :red
 		}
 	end
@@ -263,7 +265,7 @@ module Cards
 		CardText = "Repair text goes here"
 		CardData = {
 			:name => "Repair",
-			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :blue
 		}
 	end
@@ -272,7 +274,7 @@ module Cards
 		CardText = "Scientific Research text goes here"
 		CardData = {
 			:name => "Scientific Research",
-			:trigger => { :preskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) }
+			:trigger => { :preskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :blue
 		}
 	end

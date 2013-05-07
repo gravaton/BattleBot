@@ -102,15 +102,15 @@ module Locations
 	# Gameboards
 	module BoardList
 		def self.build(args = {})
-			boards = Array.new
-			loclist = BSG::Locations.constants.map { |i| BSG::Locations.const_get(i) }.select! { |i| i < GenericBoard }
-			loclist.each { |locclass| boards << locclass::build() }
+			boards = Hash.new
+			args[:loclist] ||= BSG::Locations.constants.map { |i| BSG::Locations.const_get(i) }.select! { |i| i < GenericBoard }
+			args[:loclist].each { |locclass| boards[locclass::BoardData[:name]] = locclass::build() }
 			return boards
 		end
 	end
 	class GenericBoard
 		BoardData = {}
-		Spec = [ :name, :locations ]
+		Spec = [ :name, :description, :locations ]
 		def initialize(args = {})
 			args = self.class::BoardData.merge(args)
 			raise "Mismatched board spec" unless self.class::Spec.sort == args.keys.sort
@@ -118,23 +118,37 @@ module Locations
 				self.instance_variable_set("@#{key.to_s}", value)
 				self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
 			}
-			@locations.map! { |i| BSG::Locations.const_get(i)::build() }
+
+			# If it's an array of classnames we'll presume the name should be the same as the classname
+			if @locations.kind_of?Array
+				@locations = Hash[@locations.map { |i| [i,i] }]
+			end
+			@locations.each_pair { |k,v| @locations[k] = BSG::Locations.const_get(v)::build() }
+				print "Locations:\t", @locations, "\n"
 		end
 		def self.build
 			return self.new
 		end
 	end
 	class GalacticaBoard < GenericBoard
-		BoardData = { :name => "Battlestar Galactica", :locations => [:FTLControl, :Command, :WeaponsControl, :AdmiralsQuarters, :Communications, :HangerDeck, :ResearchLab, :Armory, :Brig, :Sickbay ] }
+		BoardData = { :name => :BSG, :description => "Battlestar Galactica", :locations => [:FTLControl, :Command, :WeaponsControl, :AdmiralsQuarters, :Communications, :HangerDeck, :ResearchLab, :Armory, :Brig, :Sickbay ] }
 	end
 	class ColonialOneBoard < GenericBoard
-		BoardData = { :name => "Colonial One", :locations => [ :PressRoom, :PresidentsOffice, :Administration ] }
+		BoardData = { :name => :ColonialOne, :description => "Colonial One", :locations => [ :PressRoom, :PresidentsOffice, :Administration ] }
 	end
 	class CylonBoard < GenericBoard
-		BoardData = { :name => "Cylon Actions", :locations => [ :Caprica, :CylonFleet, :HumanFleet, :ResurrectionShip ] }
+		BoardData = { :name => :Cylon, :description => "Cylon Actions", :locations => [ :Caprica, :CylonFleet, :HumanFleet, :ResurrectionShip ] }
 	end
 	class SpaceBoard < GenericBoard
-		BoardData = { :name => "Space Locations", :locations => [ :SpaceLocation, :SpaceLocation, :SpaceLocation, :SpaceLocation, :SpaceLocation ] }
+		BoardData = { :name => :Space, :description => "Space Locations", :locations => {
+			:SpaceFront => :SpaceLocation,
+			:SpaceTopLeft => :SpaceLocation,
+			:SpaceTopRight => :SpaceLocation,
+			:SpaceBack => :SpaceLocation,
+			:SpaceBottomRight => :SpaceLocation,
+			:SpaceBottomLeft => :SpaceLocation
+			}
+		}
 	end
 end
 end

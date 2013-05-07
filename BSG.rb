@@ -114,14 +114,29 @@ module BSG
 			@hand = []
 		end
 		def ask(askparams)
+			# A fairly robust way to ask the player to select one or many things
+			# This is ugly and stupid and temporary for now
 			askparams[:attr] ||= :to_s
-			print askparams[:askprompt], "\n"
-			askparams[:options].each_with_index { |opt, index| print "#{(index + 1)})\t#{opt.send(askparams[:attr])}\n" }
-			sel = gets.to_i
-			return askparams[:options][sel - 1]
+			askparams[:count] ||= 1
+			askparams[:donothing] ||= false
+			askparams[:nothingprompt] ||= "Complete Selection"
+
+			selections = []
+			opts = askparams[:options]
+			askparams[:count].times {
+				print askparams[:askprompt], "\n"
+				opts.each_with_index { |opt, index| print "#{(index + 1)})\t#{opt.send(askparams[:attr])}\n" }
+				print "X)\t#{askparams[:nothingprompt]}\n" if askparams[:donothing]
+				sel = gets.to_i - 1
+				break if sel < 0
+				selections << opts[sel]
+				opts.delete_at(sel)
+			}
+			return selections
+			return (selections.length > 1 ? selections : selections[0])
 		end
 		def choosechar(opts)
-			selected = ask(askprompt: 'Choose your character:', options: opts, attr: :name)
+			selected = ask(askprompt: 'Choose your character:', options: opts, attr: :name)[0]
 			print "Selecting #{selected}\n"
 			@character = selected
 			startloc = @game.boards.map { |i| i.locations.select { |j| j.kind_of?BSG::Locations.const_get(@character.startloc) } }.flatten[0]
