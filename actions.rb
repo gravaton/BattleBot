@@ -34,9 +34,10 @@ module BSG
 		end
 	end
 	class GameEvent < GenericAction
-		Spec = [ :text, :message, :type]
+		Spec = [ :text, :message, :type, :target]
 		def initialize(args)
 			args[:type] ||= :optional
+			args[:target] ||= :currentplayer
 			super(args)
 		end
 		def to_s

@@ -247,7 +247,7 @@ module Cards
 		CardText = "Evasive Maneuvers text goes here"
 		CardData = {
 			:name => "Evasive Maneuvers",
-			:trigger => { :postraiderfire => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
+			:trigger => { :postviperattack => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :red
 		}
 	end

@@ -27,6 +27,22 @@ module BSG
 			def self.build
 				return self.new
 			end
+			def gettrigger(args)
+				return {}
+			end
+			def initialdraw(args)
+				drawopts = Array.new
+				@skilldraw.each_pair { |k,v|
+					v.times { drawopts << k }
+				}
+				initdraw = args[:player].ask(askprompt: 'Choose your initial draw:', options: drawopts.flatten, count: 3)
+				drawreq = Hash.new
+				initdraw.each { |i|
+					drawreq[args[:game].decks[:skillcards][i]] ||= 0
+					drawreq[args[:game].decks[:skillcards][i]] += 1
+				}
+				args[:player].hand.concat(args[:game].drawcard(:deck => :skillcards, :spec => drawreq))
+			end
 			def draw(args)
 				drawreq = Hash.new
 				@skilldraw.each_pair { |k,v|
@@ -53,16 +69,20 @@ module BSG
 				return args[:destination]
 			end
 			def action(args)
-				choices = args[:player].checktriggers(:action)
-				object = args[:player].ask(askprompt: 'Choose action:', options: choices, donothing: true, nothingprompt: "No action")[0]
+				choices = args[:game].checktriggers(trigger: :action)
+				object = args[:player].ask(askprompt: 'Choose action:', options: choices.keys, donothing: true, nothingprompt: "No action")[0]
 				return if object == nil
 				print "Card Text: #{choices[object].text}\n"
 				args[:player].execute(:target => object.method(choices[object].message))
 				return "Generic action handler\n"
 			end
 			def crisis(args)
-				card = args[:game].drawcard(:spec => { args[:game].decks[:crisis] => 1 })[0]
-				args[:game].docrisis(card)
+				args[:card] ||= args[:game].drawcard(:spec => { args[:game].decks[:crisis] => 1 })[0]
+				if args[:card].crisis.kind_of?BSG::GameChoice
+					print "Choice!\n#{args[:card].crisis.options}\n"
+					choice = args[:player].ask(askprompt: 'Choose crisis option:', options: args[:card].crisis.options)[0]
+				end
+				args[:game].docrisis(args[:card])
 			end
 		end
 		class GaiusBaltar < GenericCharacter

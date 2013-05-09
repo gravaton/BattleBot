@@ -65,6 +65,10 @@ module BSG
 				@charavailable = @characters.keys
 			end
 		end
+		def execute(args)
+			params = {:game => self, :player => @currentplayer, :character => @currentplayer.character}.merge(args)
+			return args[:target].call(params)
+		end
 		def playerturn
 			print "#{@currentplayer.character.name}'s Turn Begins!\n"
 			@currentplayer.dispatch(:draw)
@@ -73,6 +77,20 @@ module BSG
 			@currentplayer.dispatch(:crisis)
 			@players.rotate!
 			@currentplayer = players[0]
+		end
+		def checktriggers(args)
+			args[:player] ||= @currentplayer
+			opts = Hash.new
+
+			# Find all candidate trigger objects
+			candidates = [ @currentplayer.character, @currentplayer.character.currentloc ]
+			candidates.concat(@currentplayer.hand)
+			candidates.concat(@currentplayer.quorumhand)
+			candidates.concat(@currentplayer.loyalties)
+			candidates.concat(@currentplayer.offices)
+			candidates.each { |i| opts.update(execute(target: i.method(:gettrigger), trigger: args[:trigger])) }
+
+			return opts
 		end
 		def drawcard(args)
 			req = args[:spec]
@@ -117,13 +135,14 @@ module BSG
 
 	# BSGPlayer class should handle all communication with players as well as player specific data maybe
 	class BSGPlayer
-		attr_reader :hand, :offices, :character
+		attr_reader :hand, :quorumhand, :loyalties, :offices, :character
 		def initialize(gameref)
 			@game = gameref
-			@character = nil
+			@hand = []
+			@quorumhand = []
 			@loyalties = []
 			@offices = []
-			@hand = []
+			@character = nil
 		end
 		def ask(askparams)
 			# A fairly robust way to ask the player to select one or many things
@@ -151,30 +170,17 @@ module BSG
 			print "Selecting #{selected}\n"
 			@character = selected
 
-			# Perform initial draw
-			drawopts = Array.new
-			@character.skilldraw.each_pair { |k,v|
-				v.times { drawopts << k }
-			}
-			initdraw = ask(askprompt: 'Choose your initial draw:', options: drawopts.flatten, count: 3)
-			print "Initdraw: #{initdraw}\n"
-
 			# Put the character in their starting location
 			startloc = @game.boards.values.map { |i| i.locations.values.select { |j| j.kind_of?BSG::Locations.const_get(@character.startloc) } }.flatten[0]
 			execute(:target => @character.method(:movement), :destination => startloc)
+
+			# Perform initial draw
+			dispatch(:initialdraw)
 			return @character
 		end
 		def execute(args)
 			params = {:game => @game, :player => self, :character => @character}.merge(args)
 			return args[:target].call(params)
-		end
-		def checktriggers(trigger)
-			opts = Hash.new
-			@hand.each { |i| opts.update(execute( :target => i.method(:gettrigger), :trigger => trigger)) }
-			opts.update(execute( :target => @character.currentloc.method(:gettrigger), :trigger => trigger))
-			# Check for loyalty card abilities
-			# Check for character abilities
-			return opts
 		end
 		def dispatch(verb)
 			if (@character.currentloc.status == :restricted and @character.currentloc.respond_to?verb)
