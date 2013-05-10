@@ -50,6 +50,14 @@ module BSG
 			@currentplayer = @players[0]
 			@players.each { |p|
 				choosechar(p)
+				# Plance characters in initial locations
+				startloc = @boards.values.map { |i| i.locations.values.select { |j| j.kind_of?BSG::Locations.const_get(p.character.startloc) } }.flatten[0]
+				execute(:player => p, :target => p.character.method(:movement), :destination => startloc)
+			}
+
+			# Perform initial draw
+			@players[1..-1].each { |p|
+				p.dispatch(:initialdraw)
 			}
 
 			# Now the game is in progress
@@ -66,8 +74,11 @@ module BSG
 			end
 		end
 		def execute(args)
-			params = {:game => self, :player => @currentplayer, :character => @currentplayer.character}.merge(args)
-			return args[:target].call(params)
+			args[:game] ||= self
+			args[:player] ||= @currentplayer
+			args[:character] ||= @currentplayer.character
+
+			return args[:target].call(args)
 		end
 		def playerturn
 			print "#{@currentplayer.character.name}'s Turn Begins!\n"
@@ -107,14 +118,12 @@ module BSG
 			dojump if card.jump
 		end
 		def dojump
+			print "Jump Track Increasing\n"
 			if((@jump += 1) == 5)
+				# Interrupt the game and perform all the Jump actions
 				print "Jumping!\n"
 				@jump = 0
 			end
-		end
-		def docylon(args)
-			space = args[:board]
-			type = args[:activation]
 		end
 		def doskillcheck(args)
 			order = @players.rotate
@@ -131,6 +140,28 @@ module BSG
 			order.each { |player| print "Post skillcheck for #{player}\n" }
 			# Execute the result of the skill check
 		end
+		def resolve(args)
+			case args[:event]
+			when BSG::GameEvent
+				# Do a game event
+				print "Game Event Happened!\n"
+			when BSG::GameChoice
+				# Ask about the choice
+				print "Choice!\n#{args[:event].options}\n"
+				case args[:event].targetplayer
+				when :currentplayer
+					args[:player] ||= @currentplayer
+				else
+					# Set the "player" to ask to the appropriate player
+					args[:player] ||= @currentplayer
+				end
+				choice = args[:player].ask(askprompt: 'Choose crisis option:', options: args[:event].options)[0]
+				print "Game Choice Happened!\n"
+			when BSG::SkillCheck
+				# Do a skill check
+				print "Skill Check Happened!\n"
+			end
+		end
 	end
 
 	# BSGPlayer class should handle all communication with players as well as player specific data maybe
@@ -144,20 +175,21 @@ module BSG
 			@offices = []
 			@character = nil
 		end
-		def ask(askparams)
+		def ask(args)
 			# A fairly robust way to ask the player to select one or many things
 			# This is ugly and stupid and temporary for now
-			askparams[:attr] ||= :to_s
-			askparams[:count] ||= 1
-			askparams[:donothing] ||= false
-			askparams[:nothingprompt] ||= "Complete Selection"
+			#args = { :attr => :to_s, :count => 1, :donothing => false, :nothingprompt => "Complete Selection" }.merge(args)
+			args[:attr] ||= :to_s
+			args[:count] ||= 1
+			args[:donothing] ||= false
+			args[:nothingprompt] ||= "Complete Selection"
 
 			selections = Array.new
-			opts = askparams[:options]
-			askparams[:count].times {
-				print askparams[:askprompt], "\n"
-				opts.each_with_index { |opt, index| print "#{(index + 1)})\t#{opt.send(askparams[:attr])}\n" }
-				print "X)\t#{askparams[:nothingprompt]}\n" if askparams[:donothing]
+			opts = args[:options].dup
+			args[:count].times {
+				print args[:askprompt], "\n"
+				opts.each_with_index { |opt, index| print "#{(index + 1)})\t#{opt.send(args[:attr])}\n" }
+				print "X)\t#{args[:nothingprompt]}\n" if args[:donothing]
 				sel = gets.to_i - 1
 				break if sel < 0
 				selections << opts[sel]
@@ -169,18 +201,7 @@ module BSG
 			selected = ask(askprompt: 'Choose your character:', options: opts, attr: :name)[0]
 			print "Selecting #{selected}\n"
 			@character = selected
-
-			# Put the character in their starting location
-			startloc = @game.boards.values.map { |i| i.locations.values.select { |j| j.kind_of?BSG::Locations.const_get(@character.startloc) } }.flatten[0]
-			execute(:target => @character.method(:movement), :destination => startloc)
-
-			# Perform initial draw
-			dispatch(:initialdraw)
 			return @character
-		end
-		def execute(args)
-			params = {:game => @game, :player => self, :character => @character}.merge(args)
-			return args[:target].call(params)
 		end
 		def dispatch(verb)
 			if (@character.currentloc.status == :restricted and @character.currentloc.respond_to?verb)
@@ -188,7 +209,7 @@ module BSG
 			else
 				verb = @character.method(verb)
 			end
-			return execute(:target => verb)
+			return @game.execute(:target => verb, :player => self)
 		end
 	end
 end

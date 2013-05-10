@@ -7,10 +7,12 @@ module Cards
 	class Deck
 		attr_reader :drawpile
 		def initialize(args)
+			args[:cards] ||= []
+
+			@discardpile = Array.new
 			@drawpile = Array.new
 			@drawpile.concat(args[:cards])
 			@drawpile.each { |i| i.homedeck = self }
-			@discardpile = []
 		end
 		def draw(count = 1)
 			cards = []
@@ -134,7 +136,9 @@ module Cards
 		}
 		# For now I'm going to return 10 of these cards
 		def self.build()
-			return Array.new(10, self.new)
+			cards = []
+			10.times { cards << self.new }
+			return cards
 		end
 		def semifail
 			print "Semifail\n"

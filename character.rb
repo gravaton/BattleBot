@@ -73,15 +73,14 @@ module BSG
 				object = args[:player].ask(askprompt: 'Choose action:', options: choices.keys, donothing: true, nothingprompt: "No action")[0]
 				return if object == nil
 				print "Card Text: #{choices[object].text}\n"
-				args[:player].execute(:target => object.method(choices[object].message))
+				args[:game].execute(:target => object.method(choices[object].message))
 				return "Generic action handler\n"
 			end
 			def crisis(args)
 				args[:card] ||= args[:game].drawcard(:spec => { args[:game].decks[:crisis] => 1 })[0]
-				if args[:card].crisis.kind_of?BSG::GameChoice
-					print "Choice!\n#{args[:card].crisis.options}\n"
-					choice = args[:player].ask(askprompt: 'Choose crisis option:', options: args[:card].crisis.options)[0]
-				end
+				print "Drawing a new crisis card #{args[:card].object_id}\n"
+				# Do this to the target
+				args[:game].resolve(event: args[:card].crisis)
 				args[:game].docrisis(args[:card])
 			end
 		end

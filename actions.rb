@@ -21,8 +21,6 @@ module BSG
 		def addcard(card)
 			@cards << card
 		end
-		def resolve
-		end
 		def to_s
 			output = "SKILL CHECK:\n"
 			output += @positive.to_s
@@ -45,9 +43,9 @@ module BSG
 		end
 	end
 	class GameChoice < GenericAction
-		Spec = [ :options, :player ]
+		Spec = [ :options, :targetplayer ]
 		def initialize(args)
-			args[:player] ||= :currentplayer
+			args[:targetplayer] ||= :currentplayer
 			super(args)
 		end
 	end
