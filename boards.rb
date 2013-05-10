@@ -23,6 +23,7 @@ module Locations
 			if (@trigger.has_key?args[:trigger])
 				method[self] = @trigger[args[:trigger]]
 			end
+			print "Trigger check for #{@name} returned #{method}\n"
 			return method
 		end
 		def to_s
@@ -46,7 +47,8 @@ module Locations
 	# Galactica
 	class Sickbay < GenericLocation
 		LocData = { :name => "Sickbay", :team => :human, :status => :restricted, :trigger => { :draw => :sickdraw } }
-		def sickdraw
+		def draw
+			print "Draw only one card because you're in Sick Bay!\n"
 		end
 	end
 	class Brig < GenericLocation

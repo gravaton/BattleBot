@@ -76,7 +76,7 @@ module BSG
 		def execute(args)
 			args[:game] ||= self
 			args[:player] ||= @currentplayer
-			args[:character] ||= @currentplayer.character
+			args[:character] ||= args[:player].character
 
 			return args[:target].call(args)
 		end
@@ -94,11 +94,11 @@ module BSG
 			opts = Hash.new
 
 			# Find all candidate trigger objects
-			candidates = [ @currentplayer.character, @currentplayer.character.currentloc ]
-			candidates.concat(@currentplayer.hand)
-			candidates.concat(@currentplayer.quorumhand)
-			candidates.concat(@currentplayer.loyalties)
-			candidates.concat(@currentplayer.offices)
+			candidates = [ args[:player].character, args[:player].character.currentloc ]
+			candidates.concat(args[:player].hand)
+			candidates.concat(args[:player].quorumhand)
+			candidates.concat(args[:player].loyalties)
+			candidates.concat(args[:player].offices)
 			candidates.each { |i| opts.update(execute(target: i.method(:gettrigger), trigger: args[:trigger])) }
 
 			return opts
@@ -156,7 +156,7 @@ module BSG
 					args[:player] ||= @currentplayer
 				end
 				choice = args[:player].ask(askprompt: 'Choose crisis option:', options: args[:event].options)[0]
-				print "Game Choice Happened!\n"
+				execute(:event => choice, :target => self.method(:resolve), :player => args[:player])
 			when BSG::SkillCheck
 				# Do a skill check
 				print "Skill Check Happened!\n"
