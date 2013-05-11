@@ -123,11 +123,11 @@ module Cards
 			:positive => [ :yellow, :green, :blue ],
 			:outcomes => {
 				10 => BSG::GameEvent.new( :text => "No Effect", :message => :fizzle ),
-				5 => BSG::GameEvent.new( :text => "Semi-fail", :message => :semifail),
-				:fail => BSG::GameEvent.new( :text => "Fail", :message => :fail)
+				5 => BSG::GameEvent.new( :text => "-1 Food, -1 Morale", :message => :semifail),
+				:fail => BSG::GameEvent.new( :text => "-4 Food", :message => :fail)
 			}
 		}
-		ChoiceSpec = [ BSG::SkillCheck.new(CheckSpec), BSG::GameEvent.new( :text => "Generic Selectable Event", :message => :fizzle) ]
+		ChoiceSpec = [ BSG::SkillCheck.new(CheckSpec), BSG::GameEvent.new( :text => "-2 Food", :message => :bottomchoice) ]
 		CardData = {
 			:name => "Generic Crisis",
 			:crisis => BSG::GameChoice.new( :options => ChoiceSpec ),
@@ -140,11 +140,14 @@ module Cards
 			10.times { cards << self.new }
 			return cards
 		end
-		def semifail
-			print "Semifail\n"
+		def bottomchoice(args)
+			args[:game].resource(:food => -2)
+		end
+		def semifail(args)
+			args[:game].resource(:food => -1, :morale => -1)
 		end
 		def fail
-			print "Fail\n"
+			args[:game].resource(:food => -4)
 		end
 	end
 

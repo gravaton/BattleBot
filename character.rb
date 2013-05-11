@@ -82,9 +82,8 @@ module BSG
 			end
 			def crisis(args)
 				args[:card] ||= args[:game].drawcard(:spec => { args[:game].decks[:crisis] => 1 })[0]
-				print "Drawing a new crisis card #{args[:card].object_id}\n"
 				# Do this to the target
-				args[:game].resolve(event: args[:card].crisis)
+				args[:game].resolve(event: args[:card].crisis, eventtarget: args[:card])
 				args[:game].docrisis(args[:card])
 			end
 		end

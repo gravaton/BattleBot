@@ -112,8 +112,6 @@ module BSG
 			return draw
 		end
 		def docrisis(card)
-			print "Performing crisis \"#{card.name}\"\n"
-			print "Crisis Action \"#{card.crisis}\"\n"
 			print "Cylon Activation \"#{card.activation}\"\n"
 			dojump if card.jump
 		end
@@ -144,6 +142,7 @@ module BSG
 			case args[:event]
 			when BSG::GameEvent
 				# Do a game event
+				execute(:target => args[:eventtarget].method(args[:event].message))
 				print "Game Event Happened!\n"
 			when BSG::GameChoice
 				# Ask about the choice
@@ -152,15 +151,27 @@ module BSG
 				when :currentplayer
 					args[:player] ||= @currentplayer
 				else
-					# Set the "player" to ask to the appropriate player
+					# The Choice targets another player - set the "player" to ask to the appropriate player
 					args[:player] ||= @currentplayer
 				end
-				choice = args[:player].ask(askprompt: 'Choose crisis option:', options: args[:event].options)[0]
-				execute(:event => choice, :target => self.method(:resolve), :player => args[:player])
+				args[:event] = args[:player].ask(askprompt: 'Choose crisis option:', options: args[:event].options)[0]
+				resolve(args)
+				#execute(args.merge({:target => self.method(:resolve)}))
 			when BSG::SkillCheck
 				# Do a skill check
 				print "Skill Check Happened!\n"
 			end
+		end
+		def resource(args)
+			raise "Invalid Resources" unless (args.keys - [:fuel, :food, :morale, :population]).length == 0
+			args.each_pair { |k,v|
+				@resources[k] += v
+				print "Resource #{k} changed by #{v}\n"
+				if @resources[k] < 1
+					print "GAME OVER - HUMANS LOSE\n"
+				end
+			}
+
 		end
 	end
 
