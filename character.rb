@@ -41,7 +41,11 @@ module BSG
 					drawreq[args[:game].decks[:skillcards][i]] ||= 0
 					drawreq[args[:game].decks[:skillcards][i]] += 1
 				}
-				args[:player].hand.concat(args[:game].drawcard(:deck => :skillcards, :spec => drawreq))
+				args[:player].hand.concat(args[:game].drawcard(:spec => drawreq))
+			end
+			def loyaltydraw(args)
+				drawreq = { args[:game].decks[:loyalty] => @loyalty[args[:round] - 1] }
+				args[:player].loyalty.concat(args[:game].drawcard(:spec => drawreq))
 			end
 			def draw(args)
 				drawreq = Hash.new

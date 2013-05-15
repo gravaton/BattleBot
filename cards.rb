@@ -67,10 +67,10 @@ module Cards
 		def self.build(args)
 			cards = []
 			args[:cylons].times do
-				cards << AreCylon.new
+				cards << BSG::Cards::AreCylon.new
 			end
 			(args[:total] + (args[:cylons] - 1)).times do
-				cards << NotCylon.new
+				cards << BSG::Cards::NotCylon.new
 			end
 			cards.shuffle!
 			return BSG::Cards::Deck.new(:cards => cards)
@@ -83,7 +83,16 @@ module Cards
 		CardData = { :name => "You are not a Cylon", :cylon => false }
 	end
 	class AreCylon < LoyaltyCard
-		CardData = { :name => "You are a Cylon", :cylon => true }
+		Spec = [:name, :cylon, :trigger]
+		CardData = {
+			:name => "You are a Cylon",
+			:cylon => true,
+			:trigger => { :action => BSG::GameEvent.new( :text => "I am a Cylon!", :message => :reveal ) }
+		}
+		def reveal(args)
+			print "GASP!  A Cylon!\n"
+			raise BSG::ImmediateTurnEnd
+		end
 	end
 
 	# Crisis Cards

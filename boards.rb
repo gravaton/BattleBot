@@ -78,7 +78,7 @@ module Locations
 	class FTLControl < GenericLocation
 		LocData = LocData.merge({ :name => "FTL Control", :team => :human, :status => :available })
 		def gettrigger(args)
-			return {} if args[:game].jump < 3
+			return {} if args[:game].jumptrack < 3
 			return super
 		end
 	end
@@ -127,7 +127,6 @@ module Locations
 				@locations = Hash[@locations.map { |i| [i,i] }]
 			end
 			@locations.each_pair { |k,v| @locations[k] = BSG::Locations.const_get(v)::build() }
-				print "Locations:\t", @locations, "\n"
 		end
 		def self.build
 			return self.new

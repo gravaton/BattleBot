@@ -8,9 +8,11 @@ require './boards.rb'
 
 
 module BSG
+	# Our exception class for an immediate turn ending
+	class ImmediateTurnEnd < StandardError; end
+
 	class BSGGame
-		attr_reader :players, :currentplayer, :options, :characters, :status, :resources, :centurions, :boards, :decks
-		attr_accessor :jump
+		attr_reader :players, :currentplayer, :options, :characters, :status, :resources, :centurions, :boards, :decks, :jumptrack
 	
 		def initialize(args = {})
 			# Somewhere in here we want to set the game options and figure out hwo that all works
@@ -33,6 +35,7 @@ module BSG
 			@boards = BSG::Locations::BoardList::build()
 			@decks[:skillcards] = BSG::Cards::SkillCardDecks::build()
 			@decks[:crisis] = BSG::Cards::CrisisDeck::build()
+			@decks[:loyalty] = BSG::Cards::LoyaltyDeck::build(:cylons => 12, :total => 12)
 			@characters = BSG::Characters::CharacterList::build()
 
 			# Tokens aren't quite in order yet
@@ -40,7 +43,7 @@ module BSG
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
 
 			# Set game-wide vairables
-			@jump = 0
+			@jumptrack = 0
 			@centurions = [ 0,0,0,0,0 ]
 			@resources = { :fuel => 8, :population => 12, :food => 10, :morale => 10 }
 			@charavailable = @characters.keys
@@ -55,9 +58,13 @@ module BSG
 				execute(:player => p, :target => p.character.method(:movement), :destination => startloc)
 			}
 
+			# Deal loyalty cards
+			@players.each { |p|
+				p.dispatch(verb: :loyaltydraw, round: 1)
+			}
 			# Perform initial draw
 			@players[1..-1].each { |p|
-				p.dispatch(:initialdraw)
+				p.dispatch(verb: :initialdraw)
 			}
 
 			# Now the game is in progress
@@ -82,10 +89,15 @@ module BSG
 		end
 		def playerturn
 			print "#{@currentplayer.character.name}'s Turn Begins!\n"
-			@currentplayer.dispatch(:draw)
-			@currentplayer.dispatch(:movement)
-			@currentplayer.dispatch(:action)
-			@currentplayer.dispatch(:crisis)
+			begin
+				@currentplayer.dispatch(verb: :draw)
+				@currentplayer.dispatch(verb: :movement)
+				@currentplayer.dispatch(verb: :action)
+				@currentplayer.dispatch(verb: :crisis)
+			rescue BSG::ImmediateTurnEnd
+				print "The turn ended prematurely!\n"
+			end
+
 			@players.rotate!
 			@currentplayer = players[0]
 		end
@@ -97,7 +109,7 @@ module BSG
 			candidates = [ args[:player].character, args[:player].character.currentloc ]
 			candidates.concat(args[:player].hand)
 			candidates.concat(args[:player].quorumhand)
-			candidates.concat(args[:player].loyalties)
+			candidates.concat(args[:player].loyalty)
 			candidates.concat(args[:player].offices)
 			candidates.each { |i| opts.update(execute(target: i.method(:gettrigger), trigger: args[:trigger])) }
 
@@ -112,31 +124,58 @@ module BSG
 			return draw
 		end
 		def docrisis(card)
-			print "Cylon Activation \"#{card.activation}\"\n"
-			dojump if card.jump
+			cylonactivate(card.activation)
+			jump if card.jump
 		end
-		def dojump
-			print "Jump Track Increasing\n"
-			if((@jump += 1) == 5)
-				# Interrupt the game and perform all the Jump actions
-				print "Jumping!\n"
-				@jump = 0
+		def cylonactivate(type)
+			case type
+			when :raiders
+				print "Raiders Activate!\n"
+			when :spawnraiders
+				print "Raiders Spawn!\n"
+			when :heavy
+				print "Heavy Raiders Activate!\n"
+			when :basestar
+				print "Basestars Shoot!\n"
 			end
 		end
-		def doskillcheck(args)
+		def jump
+			print "Jump Track Increasing\n"
+			if((@jumptrack += 1) == 5)
+				# Interrupt the game and perform all the Jump actions
+				print "Jumping!\n"
+				@jumptrack = 0
+			end
+		end
+		def skillcheck(args)
 			order = @players.rotate
 			# Perform any pre-skill-check actions that might modify the skill check
 			order.each { |player| print "Pre skillcheck for #{player}\n" }
 			# Destiny deck is contributed to the skill check
 			# Players contribute cards to the skill check - (Could be modified to make this open)
+			skillpot = Array.new
 			order.each { |player|
-				contrib = ask(askprompt: 'Contribute cards to skill check:', options: player.hand, count: player.hand.length, donothing: true)
+				contrib = player.ask(askprompt: 'Contribute cards to skill check:', options: player.hand, count: player.hand.length, donothing: true)
 				print "Player contributed #{contrib}\n"
+				skillpot.concat(contrib)
 			}
 			# Cards are shuffled, revealed and counted - (Expansions can have happenings occur here)
+			skillpot.shuffle!
+			total = 0
+			skillpot.each { |card|
+				if args[:check].positive.include?(card.color)
+					print "Card #{card} is positive\n"
+					total += card.value
+				else
+					print "Card #{card} is negative\n"
+					total -= card.value
+				end
+			}
+			print "Total is #{total}\n"
 			# Perform any post-skill-check actions that might modify the skill check
 			order.each { |player| print "Post skillcheck for #{player}\n" }
 			# Execute the result of the skill check
+			args[:check].outcomes.values.concat([total]).sort
 		end
 		def resolve(args)
 			case args[:event]
@@ -159,6 +198,7 @@ module BSG
 				#execute(args.merge({:target => self.method(:resolve)}))
 			when BSG::SkillCheck
 				# Do a skill check
+				skillcheck(:check => args[:event])
 				print "Skill Check Happened!\n"
 			end
 		end
@@ -177,12 +217,12 @@ module BSG
 
 	# BSGPlayer class should handle all communication with players as well as player specific data maybe
 	class BSGPlayer
-		attr_reader :hand, :quorumhand, :loyalties, :offices, :character
+		attr_reader :hand, :quorumhand, :loyalty, :offices, :character
 		def initialize(gameref)
 			@game = gameref
 			@hand = []
 			@quorumhand = []
-			@loyalties = []
+			@loyalty = []
 			@offices = []
 			@character = nil
 		end
@@ -214,13 +254,14 @@ module BSG
 			@character = selected
 			return @character
 		end
-		def dispatch(verb)
+		def dispatch(args)
 			if (@character.currentloc.status == :restricted and @character.currentloc.respond_to?verb)
-				verb = @character.currentloc.method(verb)
+				args[:target] = @character.currentloc.method(args[:verb])
 			else
-				verb = @character.method(verb)
+				args[:target] = @character.method(args[:verb])
 			end
-			return @game.execute(:target => verb, :player => self)
+			args[:player] = self
+			return @game.execute(args)
 		end
 	end
 end
