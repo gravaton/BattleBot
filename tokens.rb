@@ -1,32 +1,34 @@
 #!/usr/local/bin/ruby
 
+require './actions.rb'
+
 module BSG
-	class GenericToken
-		TokenValues = {}
-		TokenData = {}
+module Tokens
+	class Token < BSG::GameObject
 		def initialize(args = {})
-			args = self.class::TokenData.merge(args)
-			raise "Mismatched token spec" unless self.class::Spec.sort == args.keys.sort
-			args.each_pair { |key, value|
-				self.instance_variable_set("@#{key.to_s}",value)
-				self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
-			}
+			args[:currentloc] ||= nil
+			super
+		end
+		def move(args)
+			@currentloc.leave(self) unless @currentloc == nil
+			@currentloc = args[:destination]
+			@currentloc.enter(self)
 		end
 		def self.build
 		end
 	end
-	class Viper < GenericToken
-		Spec = [ :status ]
+	class Viper < Token
+		Spec = [ :status, :currentloc ]
 		TokenValues = { :ready => 8 }
-		TokenData = { :status => :ready }
+		ObjectData = { :status => :ready }
 	end
-	class Raptor < GenericToken
-		Spec = [ :status ]
+	class Raptor < Token
+		Spec = [ :status, :currentloc ]
 		TokenValues = { :ready => 4 }
-		TokenData = { :status => :ready }
+		ObjectData = { :status => :ready }
 	end
-	class CivShip < GenericToken
-		Spec = [ :status ]
+	class CivShip < Token
+		Spec = [ :status, :currentloc ]
 		TokenValues = {
 			:blank => 2,
 			:twopop => 2,
@@ -34,26 +36,26 @@ module BSG
 			:popmorale => 1,
 			:popfuel => 1
 		}
-		TokenData = { :status => :ready }
+		ObjectData = { :status => :ready }
 	end
-	class BaseStar < GenericToken
-		Spec = [ :status ]
+	class BaseStar < Token
+		Spec = [ :status, :currentloc ]
 		TokenValues = { :ready => 2 }
-		TokenData = { :status => :ready }
+		ObjectData = { :status => :ready }
 	end
-	class Raider < GenericToken
-		Spec = [ :status ]
+	class Raider < Token
+		Spec = [ :status, :currentloc ]
 		TokenValues = { :ready => 16 }
-		TokenData = { :status => :ready }
+		ObjectData = { :status => :ready }
 	end
-	class HeavyRaider < GenericToken
-		Spec = [ :status ]
+	class HeavyRaider < Token
+		Spec = [ :status, :currentloc ]
 		TokenValues = { :ready => 2 }
-		TokenData = { :status => :ready }
+		ObjectData = { :status => :ready }
 	end
-	class GalacticaDamage < GenericToken
-		Spec = [ :status, :location ]
-		Tokendata = { :status => :ready }
+	class GalacticaDamage < Token
+		Spec = [ :status, :location, :currentloc ]
+		ObjectData = { :status => :ready }
 		def initialize(location)
 			super(:location => location)
 		end
@@ -64,4 +66,5 @@ module BSG
 			return tokens
 		end
 	end
+end
 end

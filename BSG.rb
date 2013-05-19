@@ -8,9 +8,6 @@ require './boards.rb'
 
 
 module BSG
-	# Our exception class for an immediate turn ending
-	class ImmediateTurnEnd < StandardError; end
-
 	class BSGGame
 		attr_reader :players, :currentplayer, :options, :characters, :status, :resources, :centurions, :boards, :decks, :jumptrack
 	
@@ -41,6 +38,9 @@ module BSG
 			# Tokens aren't quite in order yet
 			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
 			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
+			# Damage Tokens
+			# Raiders
+			# Heavy Raiders
 
 			# Set game-wide vairables
 			@jumptrack = 0
@@ -146,6 +146,10 @@ module BSG
 				print "Jumping!\n"
 				@jumptrack = 0
 			end
+		end
+		def dieroll(args)
+			@players.each { |player| print "Pre dieroll for #{player}\n" }
+			@players.each { |player| print "Post dieroll for #{player}\n" }
 		end
 		def skillcheck(args)
 			order = @players.rotate

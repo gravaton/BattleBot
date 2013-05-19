@@ -5,6 +5,7 @@ module BSG
 
 	class GameObject
 		ObjectData = {}
+		ObjectCount = 1
 		def initialize(args = {})
 			args = self.class::ObjectData.merge(args)
 			raise "Mismatched spec" unless self.class::Spec.sort === args.keys.sort
@@ -12,6 +13,25 @@ module BSG
 				self.instance_variable_set("@#{key.to_s}",value)
 				self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
 			}
+		end
+		def self.build(args = {})
+			objects = Array.new
+			case ObjectCount
+			when Fixnum
+				ObjectCount.times do
+					objects << self.new(args)
+				end
+			when Hash
+				ObjectCount.each_pair { |property, map|
+					map.each_pair { |value, count|
+						count.times do
+							objects << self.new(property => value)
+						end
+					}
+				}
+			end
+			objects = objects[0] if objects.length == 1
+			return objects
 		end
 	end
 

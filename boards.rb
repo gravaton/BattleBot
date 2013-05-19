@@ -14,6 +14,12 @@ module Locations
 				self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
 			}
 		end
+		def enter(item)
+			@contents << item
+		end
+		def leave(item)
+			@contents.delete(item)
+		end
 		def action(args)
 			print "#{self.class}::action has been called\n"
 		end

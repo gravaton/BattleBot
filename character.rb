@@ -13,9 +13,9 @@ module BSG
 			end
 		end
 		class GenericCharacter
-			attr_reader :currentloc
-			Spec = [ :name, :type, :skilldraw, :loyalty, :startloc ]
+			Spec = [ :name, :type, :skilldraw, :loyalty, :startloc, :currentloc ]
 			def initialize(args = {})
+				args[:currentloc] ||= nil
 				args = self.class::CharData.merge(args)
 				args[:loyalty] ||= [1,1]
 				raise "Mismatched character spec" unless self.class::Spec.sort == args.keys.sort
@@ -66,7 +66,9 @@ module BSG
 				args[:destination] ||= args[:player].ask(askprompt: 'Choose destination location:', options: choices, attr: :name, donothing: true, nothingprompt: "Do not move")[0]
 				return if args[:destination] == nil
 				
+				@currentloc.leave(self) unless currentloc == nil
 				@currentloc = args[:destination]
+				@currentloc.enter(self)
 				# Discard a card if you moved ships!
 				# Tell the location that you arrived there!
 				print "#{@name} moves to #{@currentloc}\n"
