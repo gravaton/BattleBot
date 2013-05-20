@@ -36,8 +36,8 @@ module BSG
 			@characters = BSG::Characters::CharacterList::build()
 
 			# Tokens aren't quite in order yet
-			@tokens[:viperreserves] = Array.new(8,BSG::Viper.new)
-			@tokens[:raptorreserves] = Array.new(4,BSG::Raptor.new)
+			@tokens[:viperreserves] = BSG::Tokens::Viper::build()
+			@tokens[:raptorreserves] = BSG::Tokens::Raptor::build()
 			# Damage Tokens
 			# Raiders
 			# Heavy Raiders

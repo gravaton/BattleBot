@@ -37,17 +37,10 @@ module Cards
 			@drawpile.shuffle!
 		end
 	end
-	class GenericCard
-		CardData = {}
+	class Card < BSG::GameObject
 		attr_accessor :homedeck
 		def initialize(args = {})
-			@homedeck = nil
-			args = self.class::CardData.merge(args)
-			raise "Mismatched card spec" unless self.class::Spec.sort == args.keys.sort
-			args.each_pair { |key, value|
-				self.instance_variable_set("@#{key.to_s}",value)
-				self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
-			}
+			super(args)
 		end
 		def gettrigger(args)
 			events = Hash.new
@@ -76,15 +69,15 @@ module Cards
 			return BSG::Cards::Deck.new(:cards => cards)
 		end
 	end
-	class LoyaltyCard < GenericCard
+	class LoyaltyCard < Card
 		Spec = [:name, :cylon]
 	end
 	class NotCylon < LoyaltyCard
-		CardData = { :name => "You are not a Cylon", :cylon => false }
+		ObjectData = { :name => "You are not a Cylon", :cylon => false }
 	end
 	class AreCylon < LoyaltyCard
 		Spec = [:name, :cylon, :trigger]
-		CardData = {
+		ObjectData = {
 			:name => "You are a Cylon",
 			:cylon => true,
 			:trigger => { :action => BSG::GameEvent.new( :text => "I am a Cylon!", :message => :reveal ) }
@@ -107,7 +100,7 @@ module Cards
 			return BSG::Cards::Deck.new(:cards => cards)
 		end
 	end
-	class CrisisCard < GenericCard
+	class CrisisCard < Card
 		Spec = [:name, :crisis, :activation, :jump]
 		def crisis
 			case @crisis.class
@@ -137,7 +130,7 @@ module Cards
 			}
 		}
 		ChoiceSpec = [ BSG::SkillCheck.new(CheckSpec), BSG::GameEvent.new( :text => "-2 Food", :message => :bottomchoice) ]
-		CardData = {
+		ObjectData = {
 			:name => "Generic Crisis",
 			:crisis => BSG::GameChoice.new( :options => ChoiceSpec ),
 			:activation => :raiders,
@@ -178,20 +171,8 @@ module Cards
 			return decks
 		end
 	end
-	class SkillCard < GenericCard
+	class SkillCard < Card
 		Spec = [:name, :trigger, :color, :value]
-		def initialize(val)
-			super(:value => val)
-		end
-		def self.build()
-			cards = Array.new
-			self::CardValues.each_pair { |value, number|
-				number.times do
-					cards << self.new(value)
-				end
-			}
-			return cards
-		end
 		def cardaction(args)
 			print "Generic Card Action, should never be seen!\n"
 		end
@@ -200,9 +181,12 @@ module Cards
 		end
 	end
 	class ExecutiveOrder < SkillCard
-		CardValues = { 1 => 8, 2 => 6 }
 		CardText = "Executive Order text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			1 => 8,
+			2 => 6
+		}}
+		ObjectData = {
 			:name => "Executive Order",
 			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :green
@@ -212,9 +196,13 @@ module Cards
 		end
 	end
 	class DeclareEmergency < SkillCard
-		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
 		CardText = "Declare Emergency text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			5 => 1,
+			4 => 2,
+			3 => 4
+		}}
+		ObjectData = {
 			:name => "Declare Emergency",
 			:trigger => { :postskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :green
@@ -223,72 +211,100 @@ module Cards
 		end
 	end
 	class ConsolidatePower < SkillCard
-		CardValues = { 1 => 8, 2 => 6 }
 		CardText = "Consolidate Power text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			1 => 8,
+			2 => 6
+		}}
+		ObjectData = {
 			:name => "Consolidate Power",
 			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :yellow
 		}
 	end
 	class InvestigativeCommitte < SkillCard
-		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
 		CardText = "Investigative Committe text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			5 => 1,
+			4 => 2,
+			3 => 4
+		}}
+		ObjectData = {
 			:name => "Investigative Committe",
 			:trigger => { :preskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :yellow
 		}
 	end
 	class LaunchScout < SkillCard
-		CardValues = { 1 => 8, 2 => 6 }
 		CardText = "Launch Scout text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			1 => 8,
+			2 => 6
+		}}
+		ObjectData = {
 			:name => "Launch Scout",
 			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :purple
 		}
 	end
 	class StrategicPlanning < SkillCard
-		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
 		CardText = "Strategic Planning text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			5 => 1,
+			4 => 2,
+			3 => 4
+		}}
+		ObjectData = {
 			:name => "Strategic Planning",
 			:trigger => { :predieroll => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :purple
 		}
 	end
 	class EvasiveManeuvers < SkillCard
-		CardValues = { 1 => 8, 2 => 6 }
 		CardText = "Evasive Maneuvers text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			1 => 8,
+			2 => 6
+		}}
+		ObjectData = {
 			:name => "Evasive Maneuvers",
 			:trigger => { :postviperattack => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :red
 		}
 	end
 	class MaximumFirepower < SkillCard
-		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
 		CardText = "Maximum Firepower text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			5 => 1,
+			4 => 2,
+			3 => 4
+		}}
+		ObjectData = {
 			:name => "Maximum Firepower",
 			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :red
 		}
 	end
 	class Repair < SkillCard
-		CardValues = { 1 => 8, 2 => 6 }
 		CardText = "Repair text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			1 => 8,
+			2 => 6
+		}}
+		ObjectData = {
 			:name => "Repair",
 			:trigger => { :action => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :blue
 		}
 	end
 	class ScientificResearch < SkillCard
-		CardValues = { 5 => 1, 4 => 2, 3 => 4 }
 		CardText = "Scientific Research text goes here"
-		CardData = {
+		ObjectCount = { :value => {
+			5 => 1,
+			4 => 2,
+			3 => 4
+		}}
+		ObjectData = {
 			:name => "Scientific Research",
 			:trigger => { :preskillcheck => BSG::GameEvent.new( :text => CardText, :message => :cardaction) },
 			:color => :blue

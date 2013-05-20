@@ -16,19 +16,21 @@ module BSG
 		end
 		def self.build(args = {})
 			objects = Array.new
-			case ObjectCount
+			case self::ObjectCount
 			when Fixnum
-				ObjectCount.times do
+				self::ObjectCount.times do
 					objects << self.new(args)
 				end
 			when Hash
-				ObjectCount.each_pair { |property, map|
+				self::ObjectCount.each_pair { |property, map|
 					map.each_pair { |value, count|
 						count.times do
 							objects << self.new(property => value)
 						end
 					}
 				}
+			else
+				raise "Unknown ObjectCount type!"
 			end
 			objects = objects[0] if objects.length == 1
 			return objects
