@@ -8,11 +8,18 @@ module BSG
 		ObjectCount = 1
 		def initialize(args = {})
 			args = self.class::ObjectData.merge(args)
-			raise "Mismatched spec" unless self.class::Spec.sort === args.keys.sort
+			raise "Mismatched spec building #{self.class} with args #{args}" unless self.class::Spec.sort === args.keys.sort
 			args.each_pair { |key, value|
 				self.instance_variable_set("@#{key.to_s}",value)
 				self.instance_eval("def #{key.to_s}; return @#{key.to_s}; end")
 			}
+		end
+		def gettrigger(args)
+			events = Hash.new
+			if((defined? @trigger) and (@trigger.kind_of?Hash) and (@trigger.has_key?(args[:trigger])))
+				events[self] = @trigger[args[:trigger]]
+			end
+			return events
 		end
 		def self.build(args = {})
 			objects = Array.new

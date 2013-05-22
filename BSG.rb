@@ -259,7 +259,7 @@ module BSG
 			return @character
 		end
 		def dispatch(args)
-			if (@character.currentloc.status == :restricted and @character.currentloc.respond_to?verb)
+			if (@character.currentloc.status == :restricted and @character.currentloc.respond_to?args[:verb])
 				args[:target] = @character.currentloc.method(args[:verb])
 			else
 				args[:target] = @character.method(args[:verb])

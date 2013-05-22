@@ -39,17 +39,6 @@ module Cards
 	end
 	class Card < BSG::GameObject
 		attr_accessor :homedeck
-		def initialize(args = {})
-			super(args)
-		end
-		def gettrigger(args)
-			events = Hash.new
-			# Check that Trigger is Hashkind because I haven't fixed all the triggers yet
-			if((defined? @trigger) and (@trigger.kind_of?Hash) and (@trigger.has_key?(args[:trigger])))
-				events[self] = @trigger[args[:trigger]]
-			end
-			return events
-		end
 		def fizzle(args)
 			# I suppose we can use this for "no effect" results
 		end

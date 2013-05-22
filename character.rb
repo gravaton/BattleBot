@@ -21,9 +21,6 @@ module Characters
 			args[:loyalty] ||= [1,1]
 			super(args)
 		end
-		def gettrigger(args)
-			return {}
-		end
 		def initialdraw(args)
 			drawopts = Array.new
 			@skilldraw.each_pair { |k,v|
